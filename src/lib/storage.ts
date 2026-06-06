@@ -1,3 +1,4 @@
+import { es } from '../i18n/locales';
 import type { AppState } from '../types/blackjack';
 import { DEFAULT_DECK_COUNT, DEFAULT_PLAYER_COUNT } from '../types/blackjack';
 
@@ -6,7 +7,7 @@ const STORAGE_KEY = 'bj-live-helper-state';
 function createDefaultPlayers(count: number) {
   return Array.from({ length: count }, (_, i) => ({
     id: `player-${i + 1}`,
-    name: `Player ${i + 1}`,
+    name: es.players.playerName(i + 1),
     hands: [{ id: `hand-${i + 1}-1`, cards: [] as import('../types/blackjack').CardRank[] }],
   }));
 }

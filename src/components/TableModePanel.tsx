@@ -1,3 +1,4 @@
+import { useLocale } from '../i18n';
 import { ACTION_COLORS, getStrategy } from '../lib/blackjack';
 import type { CardRank, Player, PreliminaryDecision, StrategyAction } from '../types/blackjack';
 
@@ -15,15 +16,19 @@ interface TableModePanelProps {
 function DecisionCard({
   label,
   action,
+  actionLabel,
   runningCount,
   trueCount,
   variant,
+  notSetLabel,
 }: {
   label: string;
   action: StrategyAction | null;
+  actionLabel: string | null;
   runningCount: number;
   trueCount: number;
   variant: 'preliminary' | 'final';
+  notSetLabel: string;
 }) {
   const bg =
     variant === 'preliminary'
@@ -33,14 +38,14 @@ function DecisionCard({
   return (
     <div className={`rounded-xl border-2 p-4 ${bg}`}>
       <p className="text-xs uppercase tracking-wide text-gray-400">{label}</p>
-      {action ? (
+      {action && actionLabel ? (
         <span
           className={`mt-2 inline-block rounded-lg px-4 py-2 text-xl font-bold text-white ${ACTION_COLORS[action]}`}
         >
-          {action}
+          {actionLabel}
         </span>
       ) : (
-        <p className="mt-2 text-gray-500">Not set</p>
+        <p className="mt-2 text-gray-500">{notSetLabel}</p>
       )}
       <p className="mt-2 text-sm text-gray-400">
         RC: {runningCount.toFixed(0)} | TC: {trueCount.toFixed(1)}
@@ -59,12 +64,13 @@ export function TableModePanel({
   onSetMePlayer,
   onLockPreliminary,
 }: TableModePanelProps) {
+  const { t } = useLocale();
   const mePlayer = players.find((p) => p.id === mePlayerId);
   const meHand = mePlayer?.hands[0];
 
   let finalAction: StrategyAction | null = null;
   if (meHand && dealerCard && meHand.cards.length > 0) {
-    finalAction = getStrategy(meHand.cards, dealerCard, trueCount).action;
+    finalAction = getStrategy(meHand.cards, dealerCard, trueCount, t).action;
   }
 
   const prelimAction = preliminaryDecision?.action ?? null;
@@ -82,14 +88,11 @@ export function TableModePanel({
 
   return (
     <section className="space-y-4 rounded-xl border border-indigo-700 bg-indigo-950/20 p-4">
-      <h2 className="text-lg font-semibold text-indigo-200">Live Table Mode</h2>
-      <p className="text-sm text-gray-400">
-        Lock your preliminary decision while other players act. The app recalculates
-        as extra visible cards are added.
-      </p>
+      <h2 className="text-lg font-semibold text-indigo-200">{t.tableMode.title}</h2>
+      <p className="text-sm text-gray-400">{t.tableMode.description}</p>
 
       <div>
-        <label className="mb-1 block text-sm text-gray-400">My Player Number</label>
+        <label className="mb-1 block text-sm text-gray-400">{t.tableMode.myPlayerNumber}</label>
         <div className="flex flex-wrap gap-2">
           {players.map((player, idx) => (
             <button
@@ -114,37 +117,41 @@ export function TableModePanel({
         disabled={!meHand || !dealerCard || meHand.cards.length === 0}
         className="w-full rounded-xl bg-blue-700 py-3 text-base font-bold disabled:opacity-40"
       >
-        Lock Preliminary Decision
+        {t.tableMode.lockPreliminary}
       </button>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <DecisionCard
-          label="Preliminary Decision"
+          label={t.tableMode.preliminaryDecision}
           action={prelimAction}
+          actionLabel={prelimAction ? t.actions[prelimAction] : null}
           runningCount={preliminaryDecision?.runningCount ?? 0}
           trueCount={preliminaryDecision?.trueCount ?? 0}
           variant="preliminary"
+          notSetLabel={t.tableMode.notSet}
         />
         <DecisionCard
-          label="Final Decision Before My Turn"
+          label={t.tableMode.finalDecision}
           action={finalAction}
+          actionLabel={finalAction ? t.actions[finalAction] : null}
           runningCount={runningCount}
           trueCount={trueCount}
           variant="final"
+          notSetLabel={t.tableMode.notSet}
         />
       </div>
 
       {preliminaryDecision && (
         <div className="space-y-2 rounded-lg border border-gray-700 bg-gray-800/60 p-3">
           <p className="text-sm">
-            <span className="text-gray-400">True Count Change: </span>
+            <span className="text-gray-400">{t.tableMode.trueCountChange} </span>
             <span className={tcChange >= 0 ? 'text-green-400' : 'text-red-400'}>
               {tcChange >= 0 ? '+' : ''}
               {tcChange.toFixed(1)}
             </span>
           </p>
           <p className="text-sm">
-            <span className="text-gray-400">Running Count Change: </span>
+            <span className="text-gray-400">{t.tableMode.runningCountChange} </span>
             <span className={rcChange >= 0 ? 'text-green-400' : 'text-red-400'}>
               {rcChange >= 0 ? '+' : ''}
               {rcChange.toFixed(0)}
@@ -152,12 +159,12 @@ export function TableModePanel({
           </p>
           {decisionChanged && (
             <p className="rounded-lg bg-amber-900/50 px-3 py-2 text-sm font-semibold text-amber-300">
-              ⚠ Decision changed due to updated count
+              {t.tableMode.decisionChanged}
             </p>
           )}
           {decisionSame && (
             <p className="rounded-lg bg-green-900/50 px-3 py-2 text-sm font-semibold text-green-300">
-              ✓ Decision remains the same
+              {t.tableMode.decisionSame}
             </p>
           )}
         </div>

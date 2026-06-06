@@ -1,3 +1,5 @@
+import { useLocale } from '../i18n';
+
 interface RoundControlsProps {
   onSaveRound: () => void;
   onNewRound: () => void;
@@ -13,11 +15,13 @@ export function RoundControls({
   onUndoLastRound,
   savedRoundCount,
 }: RoundControlsProps) {
+  const { t } = useLocale();
+
   return (
     <section className="space-y-2">
-      <h2 className="text-lg font-semibold text-gray-200">Round Controls</h2>
+      <h2 className="text-lg font-semibold text-gray-200">{t.roundControls.title}</h2>
       <p className="text-xs text-gray-500">
-        Saved rounds in shoe: {savedRoundCount}
+        {t.roundControls.savedRounds(savedRoundCount)}
       </p>
       <div className="grid grid-cols-2 gap-2">
         <button
@@ -25,14 +29,14 @@ export function RoundControls({
           onClick={onSaveRound}
           className="rounded-xl bg-emerald-700 py-3 text-sm font-bold"
         >
-          Save Round
+          {t.roundControls.saveRound}
         </button>
         <button
           type="button"
           onClick={onNewRound}
           className="rounded-xl bg-blue-700 py-3 text-sm font-bold"
         >
-          New Round
+          {t.roundControls.newRound}
         </button>
         <button
           type="button"
@@ -40,14 +44,14 @@ export function RoundControls({
           disabled={savedRoundCount === 0}
           className="rounded-xl bg-amber-800 py-3 text-sm font-bold disabled:opacity-40"
         >
-          Undo Last Round
+          {t.roundControls.undoLastRound}
         </button>
         <button
           type="button"
           onClick={onResetShoe}
           className="rounded-xl bg-red-800 py-3 text-sm font-bold"
         >
-          Reset Shoe
+          {t.roundControls.resetShoe}
         </button>
       </div>
     </section>

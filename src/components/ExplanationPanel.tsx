@@ -1,83 +1,60 @@
+import { useLocale } from '../i18n';
+
 export function ExplanationPanel() {
+  const { t } = useLocale();
+
   return (
     <section className="space-y-4 rounded-xl border border-gray-700 bg-gray-800/40 p-4">
-      <h2 className="text-lg font-semibold text-gray-200">How It Works</h2>
+      <h2 className="text-lg font-semibold text-gray-200">{t.explanation.title}</h2>
 
       <div className="space-y-3 text-sm leading-relaxed text-gray-300">
         <div>
-          <h3 className="font-semibold text-gray-100">Running Count</h3>
-          <p>
-            The running count tracks how many high vs low cards have been seen using
-            the Hi-Lo system. Low cards (2–6) add +1, high cards (10–A) subtract −1,
-            and 7–9 are neutral.
-          </p>
+          <h3 className="font-semibold text-gray-100">{t.explanation.runningCountTitle}</h3>
+          <p>{t.explanation.runningCountBody}</p>
         </div>
 
         <div>
-          <h3 className="font-semibold text-gray-100">True Count</h3>
-          <p>
-            The true count adjusts the running count for how many decks are still in
-            the shoe. A +6 running count with 3 decks left (+2 true) is much stronger
-            than +6 with 1 deck left (+6 true).
-          </p>
+          <h3 className="font-semibold text-gray-100">{t.explanation.trueCountTitle}</h3>
+          <p>{t.explanation.trueCountBody}</p>
           <p className="mt-1 rounded-lg bg-gray-900 px-3 py-2 font-mono text-xs text-emerald-400">
-            True Count = Running Count ÷ Decks Remaining
+            {t.explanation.trueCountFormula}
           </p>
         </div>
 
         <div>
-          <h3 className="font-semibold text-gray-100">Decks Remaining</h3>
-          <p>
-            Fewer decks remaining means each card has more impact on the count. The
-            app estimates decks left from total cards minus cards seen.
-          </p>
+          <h3 className="font-semibold text-gray-100">{t.explanation.decksRemainingTitle}</h3>
+          <p>{t.explanation.decksRemainingBody}</p>
         </div>
 
         <div>
-          <h3 className="font-semibold text-gray-100">Penetration</h3>
-          <p>
-            Penetration is how deep into the shoe you are. Higher penetration means
-            more reliable count data, but less time to bet big before the shuffle.
-          </p>
+          <h3 className="font-semibold text-gray-100">{t.explanation.penetrationTitle}</h3>
+          <p>{t.explanation.penetrationBody}</p>
           <p className="mt-1 rounded-lg bg-gray-900 px-3 py-2 font-mono text-xs text-emerald-400">
-            Penetration = Cards Seen ÷ Total Cards × 100
+            {t.explanation.penetrationFormula}
           </p>
         </div>
 
         <div>
-          <h3 className="font-semibold text-gray-100">Table Dynamics</h3>
-          <p>
-            With 3–4 players at the table, more cards are dealt face-up before your
-            turn. That gives you extra time to input visible cards and refine your
-            count and strategy decision.
-          </p>
+          <h3 className="font-semibold text-gray-100">{t.explanation.tableDynamicsTitle}</h3>
+          <p>{t.explanation.tableDynamicsBody}</p>
         </div>
 
         <div>
-          <h3 className="font-semibold text-gray-100">More Visible Cards = Better Count</h3>
-          <p>
-            Every card you can see — dealer upcard, your hand, other players, and
-            discards — improves count accuracy. Track everything visible.
-          </p>
+          <h3 className="font-semibold text-gray-100">{t.explanation.visibleCardsTitle}</h3>
+          <p>{t.explanation.visibleCardsBody}</p>
         </div>
 
         <div>
-          <h3 className="font-semibold text-gray-100">Estimated Edge</h3>
-          <p>
-            The edge estimate is a rough approximation, not a guarantee of profit.
-          </p>
+          <h3 className="font-semibold text-gray-100">{t.explanation.estimatedEdgeTitle}</h3>
+          <p>{t.explanation.estimatedEdgeBody}</p>
           <p className="mt-1 rounded-lg bg-gray-900 px-3 py-2 font-mono text-xs text-emerald-400">
-            Estimated Edge ≈ (True Count − 1) × 0.5%
+            {t.explanation.estimatedEdgeFormula}
           </p>
         </div>
 
         <div>
-          <h3 className="font-semibold text-gray-100">Variance Still Matters</h3>
-          <p>
-            Even with a positive count, short-term results swing wildly. You can lose
-            many hands in a row despite playing correctly. This tool helps you make
-            better decisions — it does not eliminate luck.
-          </p>
+          <h3 className="font-semibold text-gray-100">{t.explanation.varianceTitle}</h3>
+          <p>{t.explanation.varianceBody}</p>
         </div>
       </div>
     </section>

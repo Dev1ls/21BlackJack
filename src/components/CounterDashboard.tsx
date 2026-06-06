@@ -1,3 +1,4 @@
+import { useLocale } from '../i18n';
 import type { CountStats } from '../lib/count';
 import { insuranceSuggestion } from '../lib/count';
 import type { CardRank } from '../types/blackjack';
@@ -36,39 +37,40 @@ function StatCard({
 }
 
 export function CounterDashboard({ stats, dealerCard }: CounterDashboardProps) {
+  const { t } = useLocale();
   const edgeSign = stats.estimatedEdge >= 0 ? '+' : '';
   const showInsurance = insuranceSuggestion(dealerCard, stats.trueCount);
   const edgeClass = edgeColor(stats.estimatedEdge);
 
   return (
     <section className="space-y-3">
-      <h2 className="text-lg font-semibold text-gray-200">Count Dashboard</h2>
+      <h2 className="text-lg font-semibold text-gray-200">{t.counter.title}</h2>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <StatCard label="Running Count" value={stats.runningCount.toFixed(0)} />
-        <StatCard label="True Count" value={stats.trueCount.toFixed(1)} />
-        <StatCard label="Cards Seen" value={String(stats.cardsSeen)} />
+        <StatCard label={t.counter.runningCount} value={stats.runningCount.toFixed(0)} />
+        <StatCard label={t.counter.trueCount} value={stats.trueCount.toFixed(1)} />
+        <StatCard label={t.counter.cardsSeen} value={String(stats.cardsSeen)} />
         <StatCard
-          label="Decks Remaining"
+          label={t.counter.decksRemaining}
           value={stats.decksRemaining.toFixed(2)}
         />
         <StatCard
-          label="Penetration"
+          label={t.counter.penetration}
           value={`${stats.penetration.toFixed(1)}%`}
         />
         <StatCard
-          label="Betting"
-          value={stats.bettingSuggestion}
+          label={t.counter.betting}
+          value={t.betting[stats.bettingSuggestion]}
           colorClass={edgeClass}
         />
         <StatCard
-          label="Estimated Edge"
+          label={t.counter.estimatedEdge}
           value={`${edgeSign}${stats.estimatedEdge.toFixed(1)}%`}
-          sub="Approximation only"
+          sub={t.counter.edgeApprox}
           colorClass={edgeClass}
         />
         <StatCard
-          label="Insurance"
-          value={showInsurance ? 'TAKE' : 'NO'}
+          label={t.counter.insurance}
+          value={showInsurance ? t.counter.insuranceTake : t.counter.insuranceNo}
           colorClass={
             showInsurance
               ? 'border-orange-500 bg-orange-950/50'

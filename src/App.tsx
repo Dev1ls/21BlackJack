@@ -7,6 +7,8 @@ import { RoundControls } from './components/RoundControls';
 import { StrategyOutput } from './components/StrategyOutput';
 import { TableModePanel } from './components/TableModePanel';
 import { CardButton } from './components/CardButton';
+import { useLocale } from './i18n';
+import type { Locale } from './i18n/types';
 import { getStrategy } from './lib/blackjack';
 import { calculateCountStats } from './lib/count';
 import { loadState, saveState } from './lib/storage';
@@ -44,6 +46,7 @@ function emptyHands(player: Player): Player {
 }
 
 export default function App() {
+  const { t, locale, setLocale } = useLocale();
   const [state, setState] = useState<AppState>(loadState);
   const [showExplanation, setShowExplanation] = useState(false);
 
@@ -71,7 +74,7 @@ export default function App() {
     const num = state.players.length + 1;
     const newPlayer: Player = {
       id: `player-${num}-${Date.now()}`,
-      name: `Player ${num}`,
+      name: t.players.playerName(num),
       hands: [{ id: `hand-${num}-1`, cards: [] }],
     };
     update({ players: [...state.players, newPlayer] });
@@ -170,7 +173,7 @@ export default function App() {
     const meHand = mePlayer?.hands[0];
     if (!meHand || !state.dealerCard || meHand.cards.length === 0) return;
 
-    const strategy = getStrategy(meHand.cards, state.dealerCard, stats.trueCount);
+    const strategy = getStrategy(meHand.cards, state.dealerCard, stats.trueCount, t);
     update({
       preliminaryDecision: {
         action: strategy.action,
@@ -187,21 +190,45 @@ export default function App() {
       <OfflineIndicator />
 
       <header className="mb-4">
-        <h1 className="text-2xl font-bold text-white">Blackjack Live Helper</h1>
-        <p className="text-sm text-gray-400">Hi-Lo count · Strategy · Table mode</p>
+        <div className="mb-2 flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-white">{t.app.title}</h1>
+            <p className="text-sm text-gray-400">{t.app.subtitle}</p>
+          </div>
+          <div className="shrink-0">
+            <label className="mb-1 block text-right text-xs text-gray-500">
+              {t.language.label}
+            </label>
+            <div className="flex gap-1">
+              {(['es', 'en'] as Locale[]).map((code) => (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => setLocale(code)}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
+                    locale === code
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-gray-700 text-gray-300'
+                  }`}
+                >
+                  {t.language[code]}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       </header>
 
       <div className="mb-4 rounded-lg border border-gray-700 bg-gray-800/40 px-3 py-2 text-xs text-gray-400">
-        This tool is educational and does not guarantee profit. Casino rules, table
-        limits, penetration, mistakes, and variance affect results.
+        {t.app.disclaimer}
       </div>
 
       <div className="space-y-6">
-        {/* Shoe config */}
         <section className="rounded-xl border border-gray-700 bg-gray-800/60 p-4">
-          <h2 className="mb-2 text-lg font-semibold">Shoe</h2>
+          <h2 className="mb-1 text-lg font-semibold">{t.shoe.title}</h2>
+          <p className="mb-3 text-xs text-gray-500">{t.shoe.hint}</p>
           <div className="flex items-center gap-3">
-            <label className="text-sm text-gray-400">Decks:</label>
+            <label className="text-sm text-gray-400">{t.shoe.decks}</label>
             <button
               type="button"
               onClick={() => handleDeckCountChange(state.deckCount - 1)}
@@ -224,9 +251,8 @@ export default function App() {
 
         <CounterDashboard stats={stats} dealerCard={state.dealerCard} />
 
-        {/* Dealer */}
         <section className="rounded-xl border border-gray-700 bg-gray-800/60 p-4">
-          <h2 className="mb-2 text-lg font-semibold">Dealer Visible Card</h2>
+          <h2 className="mb-2 text-lg font-semibold">{t.dealer.title}</h2>
           {state.dealerCard ? (
             <button
               type="button"
@@ -236,7 +262,7 @@ export default function App() {
               {state.dealerCard} ×
             </button>
           ) : (
-            <p className="mb-2 text-sm text-gray-500">Tap a card below</p>
+            <p className="mb-2 text-sm text-gray-500">{t.dealer.tapCard}</p>
           )}
           <div className="flex flex-wrap gap-1">
             {CARD_RANKS.map((rank) => (
@@ -249,17 +275,16 @@ export default function App() {
           </div>
         </section>
 
-        {/* Players */}
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Players</h2>
+            <h2 className="text-lg font-semibold">{t.players.title}</h2>
             <button
               type="button"
               onClick={handleAddPlayer}
               disabled={state.players.length >= MAX_PLAYERS}
               className="rounded-lg bg-gray-700 px-3 py-1.5 text-sm font-medium disabled:opacity-40"
             >
-              + Add Player
+              {t.players.addPlayer}
             </button>
           </div>
           {state.players.map((player) => (
@@ -283,12 +308,9 @@ export default function App() {
           ))}
         </section>
 
-        {/* Extra visible cards */}
         <section className="rounded-xl border border-gray-700 bg-gray-800/60 p-4">
-          <h2 className="mb-2 text-lg font-semibold">Extra Visible Cards</h2>
-          <p className="mb-2 text-xs text-gray-500">
-            Discards, other players, burn cards, etc.
-          </p>
+          <h2 className="mb-2 text-lg font-semibold">{t.extraCards.title}</h2>
+          <p className="mb-2 text-xs text-gray-500">{t.extraCards.hint}</p>
           <div className="mb-2 flex flex-wrap gap-1">
             {state.extraCards.map((card, idx) => (
               <button
@@ -348,7 +370,7 @@ export default function App() {
           onClick={() => setShowExplanation((v) => !v)}
           className="w-full rounded-xl border border-gray-600 bg-gray-800 py-3 text-sm font-semibold text-gray-300"
         >
-          {showExplanation ? 'Hide' : 'Show'} Explanation
+          {showExplanation ? t.explanation.hide : t.explanation.show}
         </button>
 
         {showExplanation && <ExplanationPanel />}

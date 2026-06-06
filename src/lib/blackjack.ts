@@ -1,3 +1,4 @@
+import type { Translations } from '../i18n/locales';
 import type { CardRank, StrategyAction } from '../types/blackjack';
 import { CARD_RANKS } from '../types/blackjack';
 
@@ -171,42 +172,46 @@ export function getStrategy(
   cards: CardRank[],
   dealerCard: CardRank,
   trueCount: number,
+  t: Translations,
 ): StrategyResult {
   if (cards.length === 0) {
-    return { action: 'HIT', reason: 'No cards dealt yet' };
+    return { action: 'HIT', reason: t.strategyReasons.noCards };
   }
 
   const hand = evaluateHand(cards);
 
   if (hand.isBlackjack) {
-    return { action: 'BLACKJACK', reason: 'Natural blackjack' };
+    return { action: 'BLACKJACK', reason: t.strategyReasons.naturalBlackjack };
   }
 
   if (hand.isBust) {
-    return { action: 'BUST', reason: `Bust with ${hand.total}` };
+    return { action: 'BUST', reason: t.strategyReasons.bust(hand.total) };
   }
 
   if (hand.is21) {
-    return { action: '21', reason: 'Reached 21' };
+    return { action: '21', reason: t.strategyReasons.reached21 };
   }
 
   if (hand.isPair && hand.pairValue !== null) {
     const pairAction = pairStrategy(hand.pairValue, dealerCard, trueCount);
     if (pairAction) {
-      return { action: pairAction, reason: `Pair of ${hand.pairValue}s` };
+      return { action: pairAction, reason: t.strategyReasons.pair(hand.pairValue) };
     }
   }
 
   if (hand.isSoft) {
     const action = softStrategy(hand.total, dealerCard);
-    return { action, reason: `Soft ${hand.total}` };
+    return { action, reason: t.strategyReasons.soft(hand.total) };
   }
 
   const action = hardStrategy(hand.total, dealerCard, trueCount);
-  return { action, reason: `Hard ${hand.total}` };
+  return { action, reason: t.strategyReasons.hard(hand.total) };
 }
 
-export function parseCardInput(input: string): { cards: CardRank[]; error: string | null } {
+export function parseCardInput(
+  input: string,
+  t: Translations,
+): { cards: CardRank[]; error: string | null } {
   const trimmed = input.trim();
   if (!trimmed) {
     return { cards: [], error: null };
@@ -217,14 +222,14 @@ export function parseCardInput(input: string): { cards: CardRank[]; error: strin
 
   for (const part of parts) {
     if (!part) {
-      return { cards: [], error: 'Empty card value found. Use format: A,7 or 10,6' };
+      return { cards: [], error: t.parseCardErrors.emptyCard };
     }
 
     const normalized = part === 'T' ? '10' : part;
     if (!CARD_RANKS.includes(normalized as CardRank)) {
       return {
         cards: [],
-        error: `"${part}" is not a valid card. Use: A, 2-10, J, Q, K`,
+        error: t.parseCardErrors.invalidCard(part),
       };
     }
     cards.push(normalized as CardRank);

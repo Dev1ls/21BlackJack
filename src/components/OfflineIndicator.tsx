@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
+import { useLocale } from '../i18n';
 
 export function OfflineIndicator() {
+  const { t } = useLocale();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
@@ -20,7 +22,7 @@ export function OfflineIndicator() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-amber-900 px-4 py-2 text-center text-sm font-semibold text-amber-200">
-      Offline — all data saved locally
+      {t.offline.message}
     </div>
   );
 }
