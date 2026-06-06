@@ -1,0 +1,139 @@
+import { useState } from 'react';
+import { CardButton } from './CardButton';
+import { parseCardInput, formatCards } from '../lib/blackjack';
+import { CARD_RANKS, type CardRank, type Player } from '../types/blackjack';
+
+interface PlayerHandProps {
+  player: Player;
+  isMe: boolean;
+  onSetMe: () => void;
+  onRemove: () => void;
+  canRemove: boolean;
+  onAddCard: (handIndex: number, card: CardRank) => void;
+  onRemoveCard: (handIndex: number, cardIndex: number) => void;
+  onSetCards: (handIndex: number, cards: CardRank[]) => void;
+}
+
+export function PlayerHandPanel({
+  player,
+  isMe,
+  onSetMe,
+  onRemove,
+  canRemove,
+  onAddCard,
+  onRemoveCard,
+  onSetCards,
+}: PlayerHandProps) {
+  const [manualInput, setManualInput] = useState('');
+  const [inputError, setInputError] = useState<string | null>(null);
+
+  const handleManualSubmit = (handIndex: number) => {
+    const { cards, error } = parseCardInput(manualInput);
+    if (error) {
+      setInputError(error);
+      return;
+    }
+    setInputError(null);
+    onSetCards(handIndex, cards);
+    setManualInput('');
+  };
+
+  return (
+    <div
+      className={`rounded-xl border p-4 ${
+        isMe
+          ? 'border-emerald-500 bg-emerald-950/30'
+          : 'border-gray-700 bg-gray-800/60'
+      }`}
+    >
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={onSetMe}
+          className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${
+            isMe
+              ? 'bg-emerald-600 text-white'
+              : 'bg-gray-700 text-gray-300'
+          }`}
+        >
+          {isMe ? '★ ME' : 'Set as Me'}
+        </button>
+        {canRemove && (
+          <button
+            type="button"
+            onClick={onRemove}
+            className="rounded-lg bg-red-900/60 px-3 py-1.5 text-sm text-red-300"
+          >
+            Remove
+          </button>
+        )}
+      </div>
+
+      {player.hands.map((hand, handIdx) => (
+        <div key={hand.id} className="space-y-2">
+          {player.hands.length > 1 && (
+            <p className="text-sm text-gray-400">Hand {handIdx + 1}</p>
+          )}
+
+          <div className="flex flex-wrap gap-1">
+            {hand.cards.map((card, cardIdx) => (
+              <button
+                key={`${hand.id}-${cardIdx}`}
+                type="button"
+                onClick={() => onRemoveCard(handIdx, cardIdx)}
+                className="rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm font-semibold"
+                title="Tap to remove"
+              >
+                {card} ×
+              </button>
+            ))}
+            {hand.cards.length === 0 && (
+              <span className="text-sm text-gray-500">No cards yet</span>
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-1">
+            {CARD_RANKS.map((rank) => (
+              <CardButton
+                key={rank}
+                rank={rank}
+                size="sm"
+                onClick={(r) => onAddCard(handIdx, r)}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+
+      <div className="mt-3 space-y-1">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={manualInput}
+            onChange={(e) => {
+              setManualInput(e.target.value);
+              setInputError(null);
+            }}
+            placeholder="A,7 or 10,6"
+            className="flex-1 rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-sm"
+          />
+          <button
+            type="button"
+            onClick={() => handleManualSubmit(0)}
+            className="rounded-lg bg-gray-700 px-3 py-2 text-sm font-medium"
+          >
+            Set
+          </button>
+        </div>
+        {inputError && (
+          <p className="text-sm text-red-400">{inputError}</p>
+        )}
+        {player.hands[0]?.cards.length > 0 && (
+          <p className="text-xs text-gray-500">
+            Current: {formatCards(player.hands[0].cards)}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
