@@ -144,6 +144,11 @@ export interface Translations {
     es: string;
     en: string;
   };
+  theme: {
+    label: string;
+    classic: string;
+    casino: string;
+  };
   actions: Record<StrategyAction, string>;
   betting: Record<BettingSuggestion, string>;
   strategyReasons: {
@@ -328,6 +333,11 @@ export const es: Translations = {
     label: 'Idioma',
     es: 'Español',
     en: 'English',
+  },
+  theme: {
+    label: 'Estilo',
+    classic: 'Clásico',
+    casino: 'Casino',
   },
   actions: {
     HIT: 'PEDIR',
@@ -529,6 +539,11 @@ export const en: Translations = {
     label: 'Language',
     es: 'Español',
     en: 'English',
+  },
+  theme: {
+    label: 'Style',
+    classic: 'Classic',
+    casino: 'Casino',
   },
   actions: {
     HIT: 'HIT',

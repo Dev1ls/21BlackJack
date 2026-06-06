@@ -15,6 +15,7 @@ import { TableModePanel } from './components/TableModePanel';
 import { CardButton } from './components/CardButton';
 import { useLocale } from './i18n';
 import type { Locale } from './i18n/types';
+import { applyTheme, loadTheme, saveTheme, type AppTheme } from './lib/theme';
 import { evaluateHand, getStrategy } from './lib/blackjack';
 import { calculateCountStats } from './lib/count';
 import {
@@ -22,6 +23,7 @@ import {
   collectAllSeenCards,
   collectCurrentRoundCards,
   getActiveHandEntry,
+  getMeHandDisplay,
   getMePlayer,
   newRoundPatch,
   nextActiveHandIndex,
@@ -43,6 +45,16 @@ export default function App() {
   const [state, setState] = useState<AppState>(loadState);
   const [showMobilePlay, setShowMobilePlay] = useState(true);
   const [showExplanation, setShowExplanation] = useState(false);
+  const [appTheme, setAppTheme] = useState<AppTheme>(loadTheme);
+
+  useEffect(() => {
+    applyTheme(appTheme);
+  }, [appTheme]);
+
+  const setTheme = (theme: AppTheme) => {
+    setAppTheme(theme);
+    saveTheme(theme);
+  };
 
   useEffect(() => {
     saveState(state);
@@ -54,13 +66,19 @@ export default function App() {
     [state.deckCount, allSeenCards],
   );
 
-  const update = useCallback((patch: Partial<AppState>) => {
-    setState((prev) => ({ ...prev, ...patch }));
+  const update = useCallback((patch: Partial<AppState> | ((prev: AppState) => Partial<AppState>)) => {
+    setState((prev) => ({
+      ...prev,
+      ...(typeof patch === 'function' ? patch(prev) : patch),
+    }));
   }, []);
 
   const mePlayer = getMePlayer(state);
-  const activeEntry = mePlayer ? getActiveHandEntry(mePlayer, state.activeHandIndex) : null;
-  const meHandCards = activeEntry?.hand.cards ?? mePlayer?.hands[0]?.cards ?? [];
+  const meHandDisplay = getMeHandDisplay(state);
+  const activeEntry = mePlayer
+    ? getActiveHandEntry(mePlayer, state.activeHandIndex)
+    : null;
+  const meHandCards = meHandDisplay.cards;
   const meHandEval = evaluateHand(meHandCards);
   const meStrategy =
     state.dealerUpcard && meHandCards.length > 0 && state.handPhase === 'playerTurn'
@@ -90,39 +108,57 @@ export default function App() {
     update({ players, mePlayerId });
   };
 
-  const updateMePlayers = (players: Player[], activeHandIndex = state.activeHandIndex) => {
-    update(applyPlayerUpdates(state, players, activeHandIndex));
+  const applyPlayersUpdate = (
+    build: (prev: AppState) => { players: Player[]; activeHandIndex?: number },
+  ) => {
+    setState((prev) => {
+      const { players, activeHandIndex = prev.activeHandIndex } = build(prev);
+      return { ...prev, ...applyPlayerUpdates(prev, players, activeHandIndex) };
+    });
   };
 
   const handleMeAddCard = (card: CardRank) => {
-    if (!mePlayer || !activeEntry) return;
-    const { index } = activeEntry;
-    const hand = mePlayer.hands[index];
-    if (hand.status === 'doubled' && hand.cards.length >= 3) return;
+    applyPlayersUpdate((prev) => {
+      const me = getMePlayer(prev);
+      if (!me) return { players: prev.players };
+      const entry = getActiveHandEntry(me, prev.activeHandIndex);
+      if (!entry) return { players: prev.players };
+      const { index } = entry;
+      const hand = me.hands[index];
+      if (hand.status === 'doubled' && hand.cards.length >= 3) return { players: prev.players };
 
-    const players = state.players.map((p) => {
-      if (p.id !== mePlayer.id) return p;
-      const hands = p.hands.map((h, hi) => {
-        if (hi !== index) return h;
-        return { ...h, cards: [...h.cards, card] };
+      const players = prev.players.map((p) => {
+        if (p.id !== me.id) return p;
+        return {
+          ...p,
+          hands: p.hands.map((h, hi) =>
+            hi !== index ? h : { ...h, cards: [...h.cards, card] },
+          ),
+        };
       });
-      return { ...p, hands };
+      return { players };
     });
-    updateMePlayers(players);
   };
 
   const handleMeRemoveCard = (cardIndex: number) => {
-    if (!mePlayer || !activeEntry) return;
-    const { index } = activeEntry;
-    const players = state.players.map((p) => {
-      if (p.id !== mePlayer.id) return p;
-      const hands = p.hands.map((h, hi) => {
-        if (hi !== index) return h;
-        return { ...h, cards: h.cards.filter((_, ci) => ci !== cardIndex) };
+    applyPlayersUpdate((prev) => {
+      const me = getMePlayer(prev);
+      if (!me) return { players: prev.players };
+      const entry = getActiveHandEntry(me, prev.activeHandIndex);
+      if (!entry) return { players: prev.players };
+      const { index } = entry;
+
+      const players = prev.players.map((p) => {
+        if (p.id !== me.id) return p;
+        return {
+          ...p,
+          hands: p.hands.map((h, hi) =>
+            hi !== index ? h : { ...h, cards: h.cards.filter((_, ci) => ci !== cardIndex) },
+          ),
+        };
       });
-      return { ...p, hands };
+      return { players, activeHandIndex: prev.activeHandIndex };
     });
-    updateMePlayers(players, state.activeHandIndex);
   };
 
   const handlePlayerCard = (
@@ -132,41 +168,45 @@ export default function App() {
     action: 'add' | 'remove',
     cardIndex?: number,
   ) => {
-    const players = state.players.map((p) => {
-      if (p.id !== playerId) return p;
-      const hands = p.hands.map((h, hi) => {
-        if (hi !== handIndex) return h;
-        if (action === 'add') return { ...h, cards: [...h.cards, card] };
-        return { ...h, cards: h.cards.filter((_, ci) => ci !== cardIndex) };
+    applyPlayersUpdate((prev) => {
+      const players = prev.players.map((p) => {
+        if (p.id !== playerId) return p;
+        const hands = p.hands.map((h, hi) => {
+          if (hi !== handIndex) return h;
+          if (action === 'add') return { ...h, cards: [...h.cards, card] };
+          return { ...h, cards: h.cards.filter((_, ci) => ci !== cardIndex) };
+        });
+        return { ...p, hands };
       });
-      return { ...p, hands };
+      return { players };
     });
-    updateMePlayers(players);
   };
 
   const handleSetPlayerCards = (playerId: string, handIndex: number, cards: CardRank[]) => {
-    const players = state.players.map((p) => {
-      if (p.id !== playerId) return p;
-      const hands = p.hands.map((h, hi) => (hi === handIndex ? { ...h, cards } : h));
-      return { ...p, hands };
+    applyPlayersUpdate((prev) => {
+      const players = prev.players.map((p) => {
+        if (p.id !== playerId) return p;
+        const hands = p.hands.map((h, hi) => (hi === handIndex ? { ...h, cards } : h));
+        return { ...p, hands };
+      });
+      return { players };
     });
-    updateMePlayers(players);
   };
 
   const setHandStatus = (handIndex: number, status: HandStatus) => {
-    if (!mePlayer) return;
-    const players = state.players.map((p) => {
-      if (p.id !== mePlayer.id) return p;
-      const hands = p.hands.map((h, hi) =>
-        hi === handIndex ? { ...h, status } : h,
-      );
-      return { ...p, hands };
+    applyPlayersUpdate((prev) => {
+      const me = getMePlayer(prev);
+      if (!me) return { players: prev.players };
+
+      const players = prev.players.map((p) => {
+        if (p.id !== me.id) return p;
+        const hands = p.hands.map((h, hi) => (hi === handIndex ? { ...h, status } : h));
+        return { ...p, hands };
+      });
+      const updatedMe = players.find((p) => p.id === me.id)!;
+      const nextIndex = nextActiveHandIndex(updatedMe, handIndex);
+      return { players, activeHandIndex: nextIndex };
     });
-    const nextIndex = nextActiveHandIndex(
-      { ...mePlayer, hands: players.find((p) => p.id === mePlayer.id)!.hands },
-      handIndex,
-    );
-    updateMePlayers(players, nextIndex);
   };
 
   const handleStand = () => {
@@ -175,11 +215,16 @@ export default function App() {
   };
 
   const handleSplit = () => {
-    if (!mePlayer || !activeEntry) return;
-    const split = splitPlayerHand(mePlayer, activeEntry.index);
-    if (!split) return;
-    const players = state.players.map((p) => (p.id === mePlayer.id ? split : p));
-    updateMePlayers(players, activeEntry.index);
+    applyPlayersUpdate((prev) => {
+      const me = getMePlayer(prev);
+      if (!me) return { players: prev.players };
+      const entry = getActiveHandEntry(me, prev.activeHandIndex);
+      if (!entry) return { players: prev.players };
+      const split = splitPlayerHand(me, entry.index);
+      if (!split) return { players: prev.players };
+      const players = prev.players.map((p) => (p.id === me.id ? split : p));
+      return { players, activeHandIndex: entry.index };
+    });
   };
 
   const handleDouble = () => {
@@ -216,21 +261,23 @@ export default function App() {
   };
 
   const handleSaveRound = () => {
-    const currentCards = collectCurrentRoundCards(state);
-    if (currentCards.length === 0) return;
-    update({
-      savedRounds: [
-        ...state.savedRounds,
-        { id: `round-${Date.now()}`, timestamp: Date.now(), cards: currentCards },
-      ],
-      ...newRoundPatch(state),
+    update((prev) => {
+      const currentCards = collectCurrentRoundCards(prev);
+      if (currentCards.length === 0) return {};
+      return {
+        savedRounds: [
+          ...prev.savedRounds,
+          { id: `round-${Date.now()}`, timestamp: Date.now(), cards: currentCards },
+        ],
+        ...newRoundPatch(prev),
+      };
     });
   };
 
-  const handleNewRound = () => update(newRoundPatch(state));
+  const handleNewRound = () => update((prev) => newRoundPatch(prev));
 
   const handleResetShoe = () => {
-    update({ savedRounds: [], ...newRoundPatch(state) });
+    update((prev) => ({ savedRounds: [], ...newRoundPatch(prev) }));
   };
 
   const handleUndoLastRound = () => {
@@ -273,7 +320,7 @@ export default function App() {
       <PlayerActions
         handPhase={state.handPhase}
         cards={meHandCards}
-        handStatus={activeEntry?.hand.status ?? 'playing'}
+        handStatus={meHandDisplay.status}
         dealerUpcard={state.dealerUpcard}
         trueCount={stats.trueCount}
         onStand={handleStand}
@@ -299,8 +346,30 @@ export default function App() {
           <h1 className="text-xl font-bold text-white sm:text-2xl">{t.app.title}</h1>
           <p className="text-xs text-gray-400 sm:text-sm">{t.app.subtitle}</p>
         </div>
-        <div className="shrink-0">
-          <label className="mb-1 block text-right text-xs text-gray-500">{t.language.label}</label>
+        <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-start">
+          <div>
+            <label className="mb-1 block text-right text-xs text-gray-500">{t.theme.label}</label>
+            <div className="flex gap-1">
+              {(['classic', 'casino'] as AppTheme[]).map((code) => (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => setTheme(code)}
+                  className={`rounded-lg px-2 py-1 text-xs font-semibold ${
+                    appTheme === code
+                      ? code === 'casino'
+                        ? 'bg-yellow-600 text-gray-900'
+                        : 'bg-emerald-600 text-white'
+                      : 'bg-gray-700 text-gray-300'
+                  }`}
+                >
+                  {t.theme[code]}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="mb-1 block text-right text-xs text-gray-500">{t.language.label}</label>
           <div className="flex gap-1">
             {(['es', 'en'] as Locale[]).map((code) => (
               <button
@@ -314,6 +383,7 @@ export default function App() {
                 {t.language[code]}
               </button>
             ))}
+          </div>
           </div>
         </div>
       </header>
@@ -353,12 +423,12 @@ export default function App() {
             onSetHoleCard={handleSetHoleCard}
             onClearHole={handleClearHole}
             onAddDrawCard={(card) =>
-              update({ dealerDrawCards: [...state.dealerDrawCards, card] })
+              update((prev) => ({ dealerDrawCards: [...prev.dealerDrawCards, card] }))
             }
             onRemoveDrawCard={(idx) =>
-              update({
-                dealerDrawCards: state.dealerDrawCards.filter((_, i) => i !== idx),
-              })
+              update((prev) => ({
+                dealerDrawCards: prev.dealerDrawCards.filter((_, i) => i !== idx),
+              }))
             }
           />
 
@@ -366,7 +436,7 @@ export default function App() {
             <QuickMePanel
               handPhase={state.handPhase}
               cards={meHandCards}
-              handIndex={activeEntry?.index ?? 0}
+              handIndex={meHandDisplay.index}
               handCount={mePlayer.hands.length}
               onAddCard={handleMeAddCard}
               onRemoveCard={handleMeRemoveCard}
@@ -481,7 +551,7 @@ export default function App() {
         handPhase={state.handPhase}
         dealerUpcard={state.dealerUpcard}
         playerCards={meHandCards}
-        handStatus={activeEntry?.hand.status ?? 'playing'}
+        handStatus={meHandDisplay.status}
         handTotal={meHandEval.total}
         action={meStrategy?.action ?? null}
         reason={meStrategy?.reason ?? null}

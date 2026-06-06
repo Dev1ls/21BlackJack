@@ -1,10 +1,41 @@
 @import 'tailwindcss';
 
+/*
+ * Paleta "Casino" (data-theme="casino")
+ * Fieltro verde · dorado ficha · crema · borgoña
+ */
+:root,
+[data-theme='classic'] {
+  --felt-bg: #111827;
+  --felt-surface: #1f2937;
+  --felt-raised: #374151;
+  --felt-border: #4b5563;
+  --felt-border-soft: #374151;
+  --text-primary: #f3f4f6;
+  --text-muted: #9ca3af;
+  --gold: #fbbf24;
+  --gold-bright: #fcd34d;
+  --danger: #b91c1c;
+}
+
+[data-theme='casino'] {
+  --felt-bg: #071510;
+  --felt-surface: #0c2419;
+  --felt-raised: #13432f;
+  --felt-border: #1e5c42;
+  --felt-border-soft: #1a4d38;
+  --text-primary: #f5f0e1;
+  --text-muted: #b8c4a8;
+  --gold: #d4af37;
+  --gold-bright: #f0d875;
+  --danger: #8b1538;
+}
+
 body {
   margin: 0;
   min-height: 100dvh;
-  background-color: #111827;
-  color: #f3f4f6;
+  background-color: var(--felt-bg);
+  color: var(--text-primary);
   font-family:
     system-ui,
     -apple-system,
@@ -13,8 +44,141 @@ body {
     Roboto,
     sans-serif;
   -webkit-font-smoothing: antialiased;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+[data-theme='casino'] body {
+  background:
+    radial-gradient(ellipse 120% 80% at 50% -20%, #145a42 0%, transparent 55%),
+    radial-gradient(ellipse 80% 50% at 100% 50%, #0a2018 0%, transparent 45%),
+    linear-gradient(180deg, #071510 0%, #030806 100%);
 }
 
 #root {
   min-height: 100dvh;
+}
+
+[data-theme='casino'] .bg-gray-900,
+[data-theme='casino'] .bg-gray-900\/40,
+[data-theme='casino'] .bg-gray-900\/90 {
+  background-color: color-mix(in srgb, var(--felt-surface) 95%, black) !important;
+}
+
+[data-theme='casino'] .bg-gray-800,
+[data-theme='casino'] .bg-gray-800\/40,
+[data-theme='casino'] .bg-gray-800\/60,
+[data-theme='casino'] .bg-gray-800\/80 {
+  background-color: color-mix(in srgb, var(--felt-raised) 88%, black) !important;
+}
+
+[data-theme='casino'] .bg-gray-700 {
+  background-color: var(--felt-border-soft) !important;
+}
+
+[data-theme='casino'] .border-gray-700,
+[data-theme='casino'] .border-gray-600 {
+  border-color: var(--felt-border) !important;
+}
+
+[data-theme='casino'] .text-gray-200,
+[data-theme='casino'] .text-gray-300,
+[data-theme='casino'] .text-white {
+  color: var(--text-primary) !important;
+}
+
+[data-theme='casino'] .text-gray-400,
+[data-theme='casino'] .text-gray-500 {
+  color: var(--text-muted) !important;
+}
+
+[data-theme='casino'] .bg-emerald-600,
+[data-theme='casino'] .bg-emerald-700 {
+  background: linear-gradient(180deg, var(--gold-bright) 0%, var(--gold) 45%, #9a7b0a 100%) !important;
+  color: #1a1205 !important;
+}
+
+[data-theme='casino'] .border-emerald-600,
+[data-theme='casino'] .border-emerald-700,
+[data-theme='casino'] .border-emerald-500 {
+  border-color: var(--gold) !important;
+}
+
+[data-theme='casino'] .text-emerald-200,
+[data-theme='casino'] .text-emerald-300,
+[data-theme='casino'] .text-emerald-400 {
+  color: var(--gold-bright) !important;
+}
+
+[data-theme='casino'] .bg-emerald-950\/20,
+[data-theme='casino'] .bg-emerald-950\/30,
+[data-theme='casino'] .bg-emerald-950\/40 {
+  background-color: color-mix(in srgb, var(--felt-raised) 70%, var(--gold) 8%) !important;
+}
+
+[data-theme='casino'] .ring-emerald-500\/50 {
+  --tw-ring-color: color-mix(in srgb, var(--gold) 50%, transparent) !important;
+}
+
+[data-theme='casino'] .bg-green-700 {
+  background: linear-gradient(180deg, #1a6b4f 0%, #0f5132 100%) !important;
+}
+
+[data-theme='casino'] .bg-yellow-600 {
+  background: linear-gradient(180deg, var(--gold-bright) 0%, var(--gold) 100%) !important;
+  color: #1a1205 !important;
+}
+
+[data-theme='casino'] .bg-purple-700 {
+  background: linear-gradient(180deg, #5b2d82 0%, #3d1d59 100%) !important;
+}
+
+[data-theme='casino'] .bg-blue-600 {
+  background: linear-gradient(180deg, #2a5a8a 0%, #1a3a5c 100%) !important;
+}
+
+[data-theme='casino'] .bg-green-600 {
+  background: linear-gradient(180deg, #1e7d5a 0%, #0f5132 100%) !important;
+}
+
+[data-theme='casino'] .bg-emerald-500 {
+  background: linear-gradient(180deg, var(--gold-bright) 0%, var(--gold) 100%) !important;
+  color: #1a1205 !important;
+}
+
+[data-theme='casino'] .bg-purple-600 {
+  background: linear-gradient(180deg, #6b3fa0 0%, #4a2d6e 100%) !important;
+}
+
+[data-theme='casino'] .bg-teal-600 {
+  background: linear-gradient(180deg, #1a6b5c 0%, #0d4a40 100%) !important;
+}
+
+[data-theme='casino'] .bg-red-700,
+[data-theme='casino'] .bg-red-800 {
+  background-color: var(--danger) !important;
+}
+
+[data-theme='casino'] .border-2.border-emerald-600 {
+  border-color: var(--gold) !important;
+  box-shadow: 0 8px 32px rgb(0 0 0 / 0.45);
+}
+
+[data-theme='casino'] .rounded-lg.border.border-gray-600.bg-gray-800,
+[data-theme='casino'] .rounded-lg.border.border-emerald-700.bg-gray-800 {
+  background: linear-gradient(145deg, #faf8f2 0%, #e8e0d0 100%) !important;
+  color: #1a1205 !important;
+  border-color: var(--gold) !important;
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.35);
+}
+
+[data-theme='casino'] .text-yellow-300,
+[data-theme='casino'] .text-amber-300 {
+  color: var(--gold-bright) !important;
+}
+
+[data-theme='casino'] .fixed.bottom-0.border-t.border-emerald-700 {
+  border-color: var(--gold) !important;
+  background: linear-gradient(180deg, var(--felt-surface) 0%, var(--felt-bg) 100%) !important;
 }

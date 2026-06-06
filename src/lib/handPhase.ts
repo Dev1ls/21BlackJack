@@ -34,6 +34,36 @@ export function getMePlayer(state: AppState): Player | undefined {
   return state.players.find((p) => p.id === state.mePlayerId);
 }
 
+/** Cartas visibles de "mi" mano: prioriza mano activa o índice activo (nunca [] por entry vacío). */
+export function getMeHandDisplay(state: AppState): {
+  cards: CardRank[];
+  index: number;
+  status: HandStatus;
+} {
+  const me = getMePlayer(state);
+  if (!me || me.hands.length === 0) {
+    return { cards: [], index: 0, status: 'playing' };
+  }
+
+  const idx = Math.min(state.activeHandIndex, me.hands.length - 1);
+  const active = getActiveHandEntry(me, state.activeHandIndex);
+  const fallbackHand = me.hands[idx] ?? me.hands[0];
+
+  if (active && active.hand.cards.length > 0) {
+    return {
+      cards: active.hand.cards,
+      index: active.index,
+      status: active.hand.status,
+    };
+  }
+
+  return {
+    cards: fallbackHand?.cards ?? [],
+    index: active?.index ?? idx,
+    status: active?.hand.status ?? fallbackHand?.status ?? 'playing',
+  };
+}
+
 export function getActiveHandEntry(
   player: Player,
   activeHandIndex: number,
@@ -51,7 +81,7 @@ export function getActiveHandEntry(
   return null;
 }
 
-export function syncHandStatus(hand: PlayerHand): PlayerHand {
+export function syncHandStatus(hand: PlayerHand, hasDealerUpcard = true): PlayerHand {
   if (hand.status === 'stood' || hand.status === 'doubled') {
     if (hand.status === 'doubled' && hand.cards.length < 3) {
       const evaluation = evaluateHand(hand.cards);
@@ -68,10 +98,13 @@ export function syncHandStatus(hand: PlayerHand): PlayerHand {
   if (hand.cards.length === 0) return { ...hand, status: 'playing' };
 
   const evaluation = evaluateHand(hand.cards);
+  if (evaluation.isBust) return { ...hand, status: 'bust' };
+
+  if (!hasDealerUpcard) return { ...hand, status: 'playing' };
+
   if (evaluation.isBlackjack && hand.cards.length === 2) {
     return { ...hand, status: 'blackjack' };
   }
-  if (evaluation.isBust) return { ...hand, status: 'bust' };
   if (evaluation.is21) return { ...hand, status: 'stood' };
   return { ...hand, status: 'playing' };
 }
@@ -194,9 +227,10 @@ export function applyPlayerUpdates(
   players: Player[],
   activeHandIndex = state.activeHandIndex,
 ): Partial<AppState> {
+  const hasDealerUpcard = Boolean(state.dealerUpcard);
   const syncedPlayers = players.map((player) => ({
     ...player,
-    hands: player.hands.map((hand) => syncHandStatus(hand)),
+    hands: player.hands.map((hand) => syncHandStatus(hand, hasDealerUpcard)),
   }));
   const next: AppState = {
     ...state,
