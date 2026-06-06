@@ -5,7 +5,7 @@ import type { CardRank } from '../types/blackjack';
 
 interface CounterDashboardProps {
   stats: CountStats;
-  dealerCard: CardRank | null;
+  dealerUpcard: CardRank | null;
 }
 
 function edgeColor(edge: number): string {
@@ -36,10 +36,10 @@ function StatCard({
   );
 }
 
-export function CounterDashboard({ stats, dealerCard }: CounterDashboardProps) {
+export function CounterDashboard({ stats, dealerUpcard }: CounterDashboardProps) {
   const { t } = useLocale();
   const edgeSign = stats.estimatedEdge >= 0 ? '+' : '';
-  const showInsurance = insuranceSuggestion(dealerCard, stats.trueCount);
+  const showInsurance = insuranceSuggestion(dealerUpcard, stats.trueCount);
   const edgeClass = edgeColor(stats.estimatedEdge);
 
   return (

@@ -1,16 +1,32 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CounterDashboard } from './components/CounterDashboard';
+import { CollapsibleSection } from './components/CollapsibleSection';
+import { DealerPanel } from './components/DealerPanel';
 import { ExplanationPanel } from './components/ExplanationPanel';
+import { MobileStrategyBar } from './components/MobileStrategyBar';
 import { OfflineIndicator } from './components/OfflineIndicator';
+import { PhaseBanner } from './components/PhaseBanner';
+import { PlayerActions } from './components/PlayerActions';
 import { PlayerHandPanel } from './components/PlayerHand';
+import { PracticeTimer } from './components/PracticeTimer';
+import { QuickMePanel } from './components/QuickMePanel';
 import { RoundControls } from './components/RoundControls';
-import { StrategyOutput } from './components/StrategyOutput';
+import { StrategyHero } from './components/StrategyHero';
 import { TableModePanel } from './components/TableModePanel';
 import { CardButton } from './components/CardButton';
 import { useLocale } from './i18n';
 import type { Locale } from './i18n/types';
-import { getStrategy } from './lib/blackjack';
+import { evaluateHand, getStrategy } from './lib/blackjack';
 import { calculateCountStats } from './lib/count';
+import {
+  applyPlayerUpdates,
+  collectAllSeenCards,
+  collectCurrentRoundCards,
+  getActiveHandEntry,
+  getMePlayer,
+  newRoundPatch,
+  nextActiveHandIndex,
+  splitPlayerHand,
+} from './lib/handPhase';
 import { loadState, saveState } from './lib/storage';
 import {
   CARD_RANKS,
@@ -18,36 +34,14 @@ import {
   MIN_PLAYERS,
   type AppState,
   type CardRank,
+  type HandStatus,
   type Player,
 } from './types/blackjack';
-
-function collectCurrentRoundCards(state: AppState): CardRank[] {
-  const cards: CardRank[] = [];
-  if (state.dealerCard) cards.push(state.dealerCard);
-  for (const player of state.players) {
-    for (const hand of player.hands) {
-      cards.push(...hand.cards);
-    }
-  }
-  cards.push(...state.extraCards);
-  return cards;
-}
-
-function collectAllSeenCards(state: AppState): CardRank[] {
-  const saved = state.savedRounds.flatMap((r) => r.cards);
-  return [...saved, ...collectCurrentRoundCards(state)];
-}
-
-function emptyHands(player: Player): Player {
-  return {
-    ...player,
-    hands: player.hands.map((h) => ({ ...h, cards: [] })),
-  };
-}
 
 export default function App() {
   const { t, locale, setLocale } = useLocale();
   const [state, setState] = useState<AppState>(loadState);
+  const [showMobilePlay, setShowMobilePlay] = useState(true);
   const [showExplanation, setShowExplanation] = useState(false);
 
   useEffect(() => {
@@ -64,9 +58,17 @@ export default function App() {
     setState((prev) => ({ ...prev, ...patch }));
   }, []);
 
+  const mePlayer = getMePlayer(state);
+  const activeEntry = mePlayer ? getActiveHandEntry(mePlayer, state.activeHandIndex) : null;
+  const meHandCards = activeEntry?.hand.cards ?? mePlayer?.hands[0]?.cards ?? [];
+  const meHandEval = evaluateHand(meHandCards);
+  const meStrategy =
+    state.dealerUpcard && meHandCards.length > 0 && state.handPhase === 'playerTurn'
+      ? getStrategy(meHandCards, state.dealerUpcard, stats.trueCount, t)
+      : null;
+
   const handleDeckCountChange = (count: number) => {
-    const clamped = Math.max(1, Math.min(8, count));
-    update({ deckCount: clamped });
+    update({ deckCount: Math.max(1, Math.min(8, count)) });
   };
 
   const handleAddPlayer = () => {
@@ -75,7 +77,7 @@ export default function App() {
     const newPlayer: Player = {
       id: `player-${num}-${Date.now()}`,
       name: t.players.playerName(num),
-      hands: [{ id: `hand-${num}-1`, cards: [] }],
+      hands: [{ id: `hand-${num}-1`, cards: [], status: 'playing' }],
     };
     update({ players: [...state.players, newPlayer] });
   };
@@ -86,6 +88,41 @@ export default function App() {
     const mePlayerId =
       state.mePlayerId === playerId ? players[0]?.id ?? null : state.mePlayerId;
     update({ players, mePlayerId });
+  };
+
+  const updateMePlayers = (players: Player[], activeHandIndex = state.activeHandIndex) => {
+    update(applyPlayerUpdates(state, players, activeHandIndex));
+  };
+
+  const handleMeAddCard = (card: CardRank) => {
+    if (!mePlayer || !activeEntry) return;
+    const { index } = activeEntry;
+    const hand = mePlayer.hands[index];
+    if (hand.status === 'doubled' && hand.cards.length >= 3) return;
+
+    const players = state.players.map((p) => {
+      if (p.id !== mePlayer.id) return p;
+      const hands = p.hands.map((h, hi) => {
+        if (hi !== index) return h;
+        return { ...h, cards: [...h.cards, card] };
+      });
+      return { ...p, hands };
+    });
+    updateMePlayers(players);
+  };
+
+  const handleMeRemoveCard = (cardIndex: number) => {
+    if (!mePlayer || !activeEntry) return;
+    const { index } = activeEntry;
+    const players = state.players.map((p) => {
+      if (p.id !== mePlayer.id) return p;
+      const hands = p.hands.map((h, hi) => {
+        if (hi !== index) return h;
+        return { ...h, cards: h.cards.filter((_, ci) => ci !== cardIndex) };
+      });
+      return { ...p, hands };
+    });
+    updateMePlayers(players, state.activeHandIndex);
   };
 
   const handlePlayerCard = (
@@ -99,68 +136,101 @@ export default function App() {
       if (p.id !== playerId) return p;
       const hands = p.hands.map((h, hi) => {
         if (hi !== handIndex) return h;
-        if (action === 'add') {
-          return { ...h, cards: [...h.cards, card] };
-        }
-        return {
-          ...h,
-          cards: h.cards.filter((_, ci) => ci !== cardIndex),
-        };
+        if (action === 'add') return { ...h, cards: [...h.cards, card] };
+        return { ...h, cards: h.cards.filter((_, ci) => ci !== cardIndex) };
       });
       return { ...p, hands };
     });
-    update({ players });
+    updateMePlayers(players);
   };
 
-  const handleSetPlayerCards = (
-    playerId: string,
-    handIndex: number,
-    cards: CardRank[],
-  ) => {
+  const handleSetPlayerCards = (playerId: string, handIndex: number, cards: CardRank[]) => {
     const players = state.players.map((p) => {
       if (p.id !== playerId) return p;
+      const hands = p.hands.map((h, hi) => (hi === handIndex ? { ...h, cards } : h));
+      return { ...p, hands };
+    });
+    updateMePlayers(players);
+  };
+
+  const setHandStatus = (handIndex: number, status: HandStatus) => {
+    if (!mePlayer) return;
+    const players = state.players.map((p) => {
+      if (p.id !== mePlayer.id) return p;
       const hands = p.hands.map((h, hi) =>
-        hi === handIndex ? { ...h, cards } : h,
+        hi === handIndex ? { ...h, status } : h,
       );
       return { ...p, hands };
     });
-    update({ players });
+    const nextIndex = nextActiveHandIndex(
+      { ...mePlayer, hands: players.find((p) => p.id === mePlayer.id)!.hands },
+      handIndex,
+    );
+    updateMePlayers(players, nextIndex);
+  };
+
+  const handleStand = () => {
+    if (!activeEntry) return;
+    setHandStatus(activeEntry.index, 'stood');
+  };
+
+  const handleSplit = () => {
+    if (!mePlayer || !activeEntry) return;
+    const split = splitPlayerHand(mePlayer, activeEntry.index);
+    if (!split) return;
+    const players = state.players.map((p) => (p.id === mePlayer.id ? split : p));
+    updateMePlayers(players, activeEntry.index);
+  };
+
+  const handleDouble = () => {
+    if (!activeEntry || activeEntry.hand.cards.length !== 2) return;
+    setHandStatus(activeEntry.index, 'doubled');
+  };
+
+  const handleSetUpcard = (card: CardRank | null) => {
+    setState((prev) => {
+      const next = { ...prev, dealerUpcard: card };
+      if (!card) next.handPhase = 'opening';
+      return { ...next, ...applyPlayerUpdates(next, next.players) };
+    });
+  };
+
+  const handleStartReveal = () => {
+    update({ dealerHoleRevealed: true, handPhase: 'dealerReveal' });
+  };
+
+  const handleSetHoleCard = (card: CardRank) => {
+    update({
+      dealerHoleCard: card,
+      dealerHoleRevealed: true,
+      handPhase: 'dealerDraw',
+    });
+  };
+
+  const handleClearHole = () => {
+    update({ dealerHoleCard: null, dealerHoleRevealed: false, handPhase: 'dealerReveal' });
+  };
+
+  const handleFinishDealer = () => {
+    update({ handPhase: 'roundEnd' });
   };
 
   const handleSaveRound = () => {
     const currentCards = collectCurrentRoundCards(state);
     if (currentCards.length === 0) return;
-    const newRound = {
-      id: `round-${Date.now()}`,
-      timestamp: Date.now(),
-      cards: currentCards,
-    };
     update({
-      savedRounds: [...state.savedRounds, newRound],
-      dealerCard: null,
-      players: state.players.map(emptyHands),
-      extraCards: [],
-      preliminaryDecision: null,
+      savedRounds: [
+        ...state.savedRounds,
+        { id: `round-${Date.now()}`, timestamp: Date.now(), cards: currentCards },
+      ],
+      ...newRoundPatch(state),
     });
   };
 
-  const handleNewRound = () => {
-    update({
-      dealerCard: null,
-      players: state.players.map(emptyHands),
-      extraCards: [],
-      preliminaryDecision: null,
-    });
-  };
+  const handleNewRound = () => update(newRoundPatch(state));
 
   const handleResetShoe = () => {
-    update({
-      savedRounds: [],
-      dealerCard: null,
-      players: state.players.map(emptyHands),
-      extraCards: [],
-      preliminaryDecision: null,
-    });
+    update({ savedRounds: [], ...newRoundPatch(state) });
   };
 
   const handleUndoLastRound = () => {
@@ -169,212 +239,259 @@ export default function App() {
   };
 
   const handleLockPreliminary = () => {
-    const mePlayer = state.players.find((p) => p.id === state.mePlayerId);
-    const meHand = mePlayer?.hands[0];
-    if (!meHand || !state.dealerCard || meHand.cards.length === 0) return;
-
-    const strategy = getStrategy(meHand.cards, state.dealerCard, stats.trueCount, t);
+    if (!mePlayer || !activeEntry || !state.dealerUpcard) return;
+    const strategy = getStrategy(
+      activeEntry.hand.cards,
+      state.dealerUpcard,
+      stats.trueCount,
+      t,
+    );
     update({
       preliminaryDecision: {
         action: strategy.action,
         runningCount: stats.runningCount,
         trueCount: stats.trueCount,
-        playerId: mePlayer!.id,
-        handIndex: 0,
+        playerId: mePlayer.id,
+        handIndex: activeEntry.index,
       },
     });
   };
 
+  const otherPlayers = state.players.filter((p) => p.id !== state.mePlayerId);
+
+  const sidebar = (
+    <aside className="space-y-3 lg:sticky lg:top-3 lg:self-start">
+      <StrategyHero
+        handPhase={state.handPhase}
+        dealerUpcard={state.dealerUpcard}
+        playerCards={meHandCards}
+        handTotal={meHandEval.total}
+        action={meStrategy?.action ?? null}
+        reason={meStrategy?.reason ?? null}
+        stats={stats}
+      />
+      <PlayerActions
+        handPhase={state.handPhase}
+        cards={meHandCards}
+        handStatus={activeEntry?.hand.status ?? 'playing'}
+        dealerUpcard={state.dealerUpcard}
+        trueCount={stats.trueCount}
+        onStand={handleStand}
+        onSplit={handleSplit}
+        onDouble={handleDouble}
+        onFinishDealer={handleFinishDealer}
+      />
+      <PracticeTimer
+        dealerUpcard={state.dealerUpcard}
+        playerCards={meHandCards}
+        handTotal={meHandEval.total}
+        recommendedAction={meStrategy?.action ?? null}
+      />
+    </aside>
+  );
+
   return (
-    <div className="mx-auto min-h-dvh max-w-lg px-3 pb-8 pt-4">
+    <div className="mx-auto min-h-dvh max-w-6xl px-3 pb-24 pt-3 lg:pb-8">
       <OfflineIndicator />
 
-      <header className="mb-4">
-        <div className="mb-2 flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold text-white">{t.app.title}</h1>
-            <p className="text-sm text-gray-400">{t.app.subtitle}</p>
-          </div>
-          <div className="shrink-0">
-            <label className="mb-1 block text-right text-xs text-gray-500">
-              {t.language.label}
-            </label>
-            <div className="flex gap-1">
-              {(['es', 'en'] as Locale[]).map((code) => (
-                <button
-                  key={code}
-                  type="button"
-                  onClick={() => setLocale(code)}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
-                    locale === code
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-gray-700 text-gray-300'
-                  }`}
-                >
-                  {t.language[code]}
-                </button>
-              ))}
-            </div>
+      <header className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-white sm:text-2xl">{t.app.title}</h1>
+          <p className="text-xs text-gray-400 sm:text-sm">{t.app.subtitle}</p>
+        </div>
+        <div className="shrink-0">
+          <label className="mb-1 block text-right text-xs text-gray-500">{t.language.label}</label>
+          <div className="flex gap-1">
+            {(['es', 'en'] as Locale[]).map((code) => (
+              <button
+                key={code}
+                type="button"
+                onClick={() => setLocale(code)}
+                className={`rounded-lg px-2 py-1 text-xs font-semibold ${
+                  locale === code ? 'bg-emerald-600 text-white' : 'bg-gray-700 text-gray-300'
+                }`}
+              >
+                {t.language[code]}
+              </button>
+            ))}
           </div>
         </div>
       </header>
 
-      <div className="mb-4 rounded-lg border border-gray-700 bg-gray-800/40 px-3 py-2 text-xs text-gray-400">
-        {t.app.disclaimer}
-      </div>
+      <PhaseBanner phase={state.handPhase} />
 
-      <div className="space-y-6">
-        <section className="rounded-xl border border-gray-700 bg-gray-800/60 p-4">
-          <h2 className="mb-1 text-lg font-semibold">{t.shoe.title}</h2>
-          <p className="mb-3 text-xs text-gray-500">{t.shoe.hint}</p>
-          <div className="flex items-center gap-3">
-            <label className="text-sm text-gray-400">{t.shoe.decks}</label>
+      <div className="mt-3 grid gap-4 lg:grid-cols-[1fr_300px]">
+        <main className="space-y-3">
+          <section className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-700 bg-gray-800/60 px-3 py-2">
+            <span className="text-sm text-gray-400">{t.shoe.decks}</span>
             <button
               type="button"
               onClick={() => handleDeckCountChange(state.deckCount - 1)}
-              className="h-10 w-10 rounded-lg bg-gray-700 text-lg font-bold"
+              className="h-9 w-9 rounded-lg bg-gray-700 font-bold"
             >
               −
             </button>
-            <span className="min-w-8 text-center text-xl font-bold">
-              {state.deckCount}
-            </span>
+            <span className="min-w-6 text-center text-lg font-bold">{state.deckCount}</span>
             <button
               type="button"
               onClick={() => handleDeckCountChange(state.deckCount + 1)}
-              className="h-10 w-10 rounded-lg bg-gray-700 text-lg font-bold"
+              className="h-9 w-9 rounded-lg bg-gray-700 font-bold"
             >
               +
             </button>
-          </div>
-        </section>
+            <span className="text-xs text-gray-500">{t.shoe.hint}</span>
+          </section>
 
-        <CounterDashboard stats={stats} dealerCard={state.dealerCard} />
+          <DealerPanel
+            handPhase={state.handPhase}
+            upcard={state.dealerUpcard}
+            holeCard={state.dealerHoleCard}
+            holeRevealed={state.dealerHoleRevealed}
+            drawCards={state.dealerDrawCards}
+            onSetUpcard={handleSetUpcard}
+            onStartReveal={handleStartReveal}
+            onSetHoleCard={handleSetHoleCard}
+            onClearHole={handleClearHole}
+            onAddDrawCard={(card) =>
+              update({ dealerDrawCards: [...state.dealerDrawCards, card] })
+            }
+            onRemoveDrawCard={(idx) =>
+              update({
+                dealerDrawCards: state.dealerDrawCards.filter((_, i) => i !== idx),
+              })
+            }
+          />
 
-        <section className="rounded-xl border border-gray-700 bg-gray-800/60 p-4">
-          <h2 className="mb-2 text-lg font-semibold">{t.dealer.title}</h2>
-          {state.dealerCard ? (
-            <button
-              type="button"
-              onClick={() => update({ dealerCard: null })}
-              className="mb-2 rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 font-semibold"
-            >
-              {state.dealerCard} ×
-            </button>
-          ) : (
-            <p className="mb-2 text-sm text-gray-500">{t.dealer.tapCard}</p>
-          )}
-          <div className="flex flex-wrap gap-1">
-            {CARD_RANKS.map((rank) => (
-              <CardButton
-                key={`dealer-${rank}`}
-                rank={rank}
-                onClick={(r) => update({ dealerCard: r })}
-              />
-            ))}
-          </div>
-        </section>
-
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">{t.players.title}</h2>
-            <button
-              type="button"
-              onClick={handleAddPlayer}
-              disabled={state.players.length >= MAX_PLAYERS}
-              className="rounded-lg bg-gray-700 px-3 py-1.5 text-sm font-medium disabled:opacity-40"
-            >
-              {t.players.addPlayer}
-            </button>
-          </div>
-          {state.players.map((player) => (
-            <PlayerHandPanel
-              key={player.id}
-              player={player}
-              isMe={player.id === state.mePlayerId}
-              onSetMe={() => update({ mePlayerId: player.id })}
-              onRemove={() => handleRemovePlayer(player.id)}
-              canRemove={state.players.length > MIN_PLAYERS}
-              onAddCard={(handIdx, card) =>
-                handlePlayerCard(player.id, handIdx, card, 'add')
-              }
-              onRemoveCard={(handIdx, cardIdx) =>
-                handlePlayerCard(player.id, handIdx, '' as CardRank, 'remove', cardIdx)
-              }
-              onSetCards={(handIdx, cards) =>
-                handleSetPlayerCards(player.id, handIdx, cards)
-              }
+          {mePlayer && (
+            <QuickMePanel
+              handPhase={state.handPhase}
+              cards={meHandCards}
+              handIndex={activeEntry?.index ?? 0}
+              handCount={mePlayer.hands.length}
+              onAddCard={handleMeAddCard}
+              onRemoveCard={handleMeRemoveCard}
             />
-          ))}
-        </section>
+          )}
 
-        <section className="rounded-xl border border-gray-700 bg-gray-800/60 p-4">
-          <h2 className="mb-2 text-lg font-semibold">{t.extraCards.title}</h2>
-          <p className="mb-2 text-xs text-gray-500">{t.extraCards.hint}</p>
-          <div className="mb-2 flex flex-wrap gap-1">
-            {state.extraCards.map((card, idx) => (
-              <button
-                key={`extra-${idx}`}
-                type="button"
-                onClick={() =>
-                  update({
-                    extraCards: state.extraCards.filter((_, i) => i !== idx),
-                  })
-                }
-                className="rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm font-semibold"
-              >
-                {card} ×
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {CARD_RANKS.map((rank) => (
-              <CardButton
-                key={`extra-${rank}`}
-                rank={rank}
-                size="sm"
-                onClick={(r) => update({ extraCards: [...state.extraCards, r] })}
+          {otherPlayers.length > 0 && (
+            <CollapsibleSection title={t.ui.otherPlayers}>
+              <div className="space-y-3">
+                {otherPlayers.map((player) => (
+                  <PlayerHandPanel
+                    key={player.id}
+                    player={player}
+                    isMe={false}
+                    onSetMe={() => update({ mePlayerId: player.id })}
+                    onRemove={() => handleRemovePlayer(player.id)}
+                    canRemove={state.players.length > MIN_PLAYERS}
+                    onAddCard={(handIdx, card) =>
+                      handlePlayerCard(player.id, handIdx, card, 'add')
+                    }
+                    onRemoveCard={(handIdx, cardIdx) =>
+                      handlePlayerCard(player.id, handIdx, '' as CardRank, 'remove', cardIdx)
+                    }
+                    onSetCards={(handIdx, cards) =>
+                      handleSetPlayerCards(player.id, handIdx, cards)
+                    }
+                  />
+                ))}
+              </div>
+            </CollapsibleSection>
+          )}
+
+          <button
+            type="button"
+            onClick={handleAddPlayer}
+            disabled={state.players.length >= MAX_PLAYERS}
+            className="w-full rounded-lg bg-gray-800 py-2 text-sm text-gray-400 disabled:opacity-40"
+          >
+            {t.players.addPlayer}
+          </button>
+
+          <CollapsibleSection title={t.ui.advanced}>
+            <div className="space-y-3">
+              <section>
+                <h3 className="mb-2 text-sm font-semibold">{t.extraCards.title}</h3>
+                <p className="mb-2 text-xs text-gray-500">{t.extraCards.hint}</p>
+                <div className="mb-2 flex flex-wrap gap-1">
+                  {state.extraCards.map((card, idx) => (
+                    <button
+                      key={`extra-${idx}`}
+                      type="button"
+                      onClick={() =>
+                        update({
+                          extraCards: state.extraCards.filter((_, i) => i !== idx),
+                        })
+                      }
+                      className="rounded-lg border border-gray-600 bg-gray-700 px-2 py-1 text-sm"
+                    >
+                      {card} ×
+                    </button>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {CARD_RANKS.map((rank) => (
+                    <CardButton
+                      key={`extra-${rank}`}
+                      rank={rank}
+                      size="sm"
+                      onClick={(r) => update({ extraCards: [...state.extraCards, r] })}
+                    />
+                  ))}
+                </div>
+              </section>
+
+              <TableModePanel
+                players={state.players}
+                mePlayerId={state.mePlayerId}
+                dealerUpcard={state.dealerUpcard}
+                trueCount={stats.trueCount}
+                runningCount={stats.runningCount}
+                preliminaryDecision={state.preliminaryDecision}
+                onSetMePlayer={(id) => update({ mePlayerId: id })}
+                onLockPreliminary={handleLockPreliminary}
               />
-            ))}
-          </div>
-        </section>
 
-        <StrategyOutput
-          players={state.players}
-          dealerCard={state.dealerCard}
-          trueCount={stats.trueCount}
-          mePlayerId={state.mePlayerId}
-        />
+              <button
+                type="button"
+                onClick={() => setShowExplanation((v) => !v)}
+                className="w-full rounded-lg border border-gray-600 py-2 text-sm text-gray-300"
+              >
+                {showExplanation ? t.explanation.hide : t.explanation.show}
+              </button>
+              {showExplanation && <ExplanationPanel />}
+            </div>
+          </CollapsibleSection>
 
-        <TableModePanel
-          players={state.players}
-          mePlayerId={state.mePlayerId}
-          dealerCard={state.dealerCard}
-          trueCount={stats.trueCount}
-          runningCount={stats.runningCount}
-          preliminaryDecision={state.preliminaryDecision}
-          onSetMePlayer={(id) => update({ mePlayerId: id })}
-          onLockPreliminary={handleLockPreliminary}
-        />
+          <RoundControls
+            onSaveRound={handleSaveRound}
+            onNewRound={handleNewRound}
+            onResetShoe={handleResetShoe}
+            onUndoLastRound={handleUndoLastRound}
+            savedRoundCount={state.savedRounds.length}
+          />
+        </main>
 
-        <RoundControls
-          onSaveRound={handleSaveRound}
-          onNewRound={handleNewRound}
-          onResetShoe={handleResetShoe}
-          onUndoLastRound={handleUndoLastRound}
-          savedRoundCount={state.savedRounds.length}
-        />
-
-        <button
-          type="button"
-          onClick={() => setShowExplanation((v) => !v)}
-          className="w-full rounded-xl border border-gray-600 bg-gray-800 py-3 text-sm font-semibold text-gray-300"
-        >
-          {showExplanation ? t.explanation.hide : t.explanation.show}
-        </button>
-
-        {showExplanation && <ExplanationPanel />}
+        <div className="hidden lg:block">{sidebar}</div>
       </div>
+
+      <MobileStrategyBar
+        open={showMobilePlay}
+        onToggle={() => setShowMobilePlay((v) => !v)}
+        handPhase={state.handPhase}
+        dealerUpcard={state.dealerUpcard}
+        playerCards={meHandCards}
+        handStatus={activeEntry?.hand.status ?? 'playing'}
+        handTotal={meHandEval.total}
+        action={meStrategy?.action ?? null}
+        reason={meStrategy?.reason ?? null}
+        stats={stats}
+        trueCount={stats.trueCount}
+        onStand={handleStand}
+        onSplit={handleSplit}
+        onDouble={handleDouble}
+        onFinishDealer={handleFinishDealer}
+      />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import type { CardRank, Player, PreliminaryDecision, StrategyAction } from '../t
 interface TableModePanelProps {
   players: Player[];
   mePlayerId: string | null;
-  dealerCard: CardRank | null;
+  dealerUpcard: CardRank | null;
   trueCount: number;
   runningCount: number;
   preliminaryDecision: PreliminaryDecision | null;
@@ -57,7 +57,7 @@ function DecisionCard({
 export function TableModePanel({
   players,
   mePlayerId,
-  dealerCard,
+  dealerUpcard,
   trueCount,
   runningCount,
   preliminaryDecision,
@@ -69,8 +69,8 @@ export function TableModePanel({
   const meHand = mePlayer?.hands[0];
 
   let finalAction: StrategyAction | null = null;
-  if (meHand && dealerCard && meHand.cards.length > 0) {
-    finalAction = getStrategy(meHand.cards, dealerCard, trueCount, t).action;
+  if (meHand && dealerUpcard && meHand.cards.length > 0) {
+    finalAction = getStrategy(meHand.cards, dealerUpcard, trueCount, t).action;
   }
 
   const prelimAction = preliminaryDecision?.action ?? null;
@@ -114,7 +114,7 @@ export function TableModePanel({
       <button
         type="button"
         onClick={onLockPreliminary}
-        disabled={!meHand || !dealerCard || meHand.cards.length === 0}
+        disabled={!meHand || !dealerUpcard || meHand.cards.length === 0}
         className="w-full rounded-xl bg-blue-700 py-3 text-base font-bold disabled:opacity-40"
       >
         {t.tableMode.lockPreliminary}

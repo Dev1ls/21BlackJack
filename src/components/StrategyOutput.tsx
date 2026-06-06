@@ -4,7 +4,7 @@ import type { CardRank, Player, StrategyAction } from '../types/blackjack';
 
 interface StrategyOutputProps {
   players: Player[];
-  dealerCard: CardRank | null;
+  dealerUpcard: CardRank | null;
   trueCount: number;
   mePlayerId: string | null;
 }
@@ -31,13 +31,13 @@ function ActionBadge({
 
 export function StrategyOutput({
   players,
-  dealerCard,
+  dealerUpcard,
   trueCount,
   mePlayerId,
 }: StrategyOutputProps) {
   const { t } = useLocale();
 
-  if (!dealerCard) {
+  if (!dealerUpcard) {
     return (
       <section className="rounded-xl border border-gray-700 bg-gray-800/60 p-4">
         <p className="text-gray-400">{t.strategy.needDealer}</p>
@@ -51,7 +51,7 @@ export function StrategyOutput({
       {players.map((player) => {
         const isMe = player.id === mePlayerId;
         return player.hands.map((hand, handIdx) => {
-          const strategy = getStrategy(hand.cards, dealerCard, trueCount, t);
+          const strategy = getStrategy(hand.cards, dealerUpcard, trueCount, t);
           const evaluation = evaluateHand(hand.cards);
 
           return (
@@ -66,7 +66,8 @@ export function StrategyOutput({
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <p className={`font-semibold ${isMe ? 'text-emerald-300 text-lg' : 'text-gray-200'}`}>
-                    {isMe ? t.players.me : player.name}
+                    {player.name}
+                    {isMe ? ` · ${t.players.me}` : ''}
                     {player.hands.length > 1 ? ` ${t.strategy.handLabel(handIdx + 1)}` : ''}
                   </p>
                   <p className="text-sm text-gray-400">

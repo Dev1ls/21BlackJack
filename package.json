@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:timing": "vitest run src/lib/tableTiming.test.ts",
     "test:watch": "vitest"
   },
   "dependencies": {

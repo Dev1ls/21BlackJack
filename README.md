@@ -81,50 +81,37 @@ Arriba verás **“Barajas en la mesa”**.
 
 > Si no sabes cuántas son, empieza con **8** (es lo más común) y corrige después si te enteras.
 
-### Paso 2 — Carta del dealer
+### Paso 2 — Carta visible del dealer
 
-Toca la carta que el dealer tiene **boca arriba** (la que todos ven).
+Toca la carta **boca arriba** del dealer. La carta **oculta** no se usa para decidir tu jugada.
 
-Sin eso, la app no puede decirte qué conviene hacer.
+### Paso 3 — Tus 2 cartas (panel “Mis cartas”)
 
-### Paso 3 — Tus cartas (y las de otros, si quieres)
+Toca tus cartas en los botones compactos. La **jugada grande** (PEDIR / QUEDARTE / DOBLAR / SEPARAR) aparece **a la derecha en desktop** o con **“Ver jugada”** abajo en el celular — sin hacer scroll.
 
-Cada jugador tiene su bloque:
+### Paso 4 — Tu turno
 
-1. Pulsa **“Soy yo”** en tu asiento.
-2. Toca tus cartas en los botones, **o** escríbelas abajo (`A,7` o `10,6`) y pulsa **Aplicar**.
-3. Si hay más jugadores en la mesa, puedes agregarlos con **+ Agregar jugador** y meter **sus cartas visibles**. Eso mejora el conteo.
+- **PEDIR:** toca otra carta en “Mis cartas”; la recomendación se recalcula sola.
+- **QUEDARTE / SEPARAR / DOBLAR:** botones en el panel derecho (o en “Ver jugada” en móvil).
 
-Para borrar una carta que metiste mal, tócala otra vez (sale con una **×**).
+El banner de fase te dice en qué momento estás.
 
-### Paso 4 — Mira el panel de conteo
+### Paso 5 — Carta oculta del dealer
 
-Ahí ves, en lenguaje sencillo:
+Cuando terminas y el dealer **voltea la oculta**, pulsa **“Volteó — registrar”** y elige esa carta. **Solo suma al conteo**; no cambia lo que ya jugaste.
 
-- **Conteo corrido** — la suma Hi-Lo hasta ahora.
-- **Conteo real** — ajustado por cuánta baraja falta.
-- **Cartas que ya salieron** — cuántas registraste.
-- **Barajas que faltan** — estimado de lo que queda por repartir.
-- **Avance de la baraja** — qué tan lejos van antes de barajar de nuevo.
-- **Cuánto apostar** — sugerencia de MÍNIMA → FUERTE según el conteo real.
-- **Seguro** — si el dealer enseña As y el conteo real es alto, a veces conviene el seguro (la app te dice SÍ o NO).
+### Paso 6 — Dealer pide cartas
 
-### Paso 5 — Qué conviene hacer
+Agrega cada carta extra que saque el dealer. Pulsa **“Dealer terminó”** cuando acabe.
 
-La sección **“Qué conviene hacer”** te muestra **PEDIR**, **QUEDARTE**, **DOBLAR**, **SEPARAR**, etc., para cada jugador. Tu mano aparece marcada con **★ YO**.
+### Paso 7 — Guardar mano
 
-### Paso 6 — Modo en vivo (cuando no te toca todavía)
+**Guardar mano** cierra la ronda en el conteo. **Nueva mano** limpia cartas pero mantiene el conteo.
 
-En mesas con varios jugadores, **otros piden cartas antes que tú**. Mientras tanto salen cartas nuevas y el conteo cambia.
+### Opciones avanzadas (colapsadas)
 
-1. Marca **qué jugador eres tú** (botones 1, 2, 3…).
-2. Cuando ya tengas tus cartas y la del dealer, pulsa **“Guardar mi jugada por ahora”**.
-3. Sigue metiendo cartas que veas (otros jugadores, cartas botadas) en **“Otras cartas que viste”**.
-4. La app compara **lo que ibas a hacer** vs **lo que te conviene ya en tu turno**.
-
-Si cambió, te avisa.
-
-### Paso 7 — Guardar manos y empezar de cero
+- **Otros jugadores** y **Otras cartas que viste** — mejoran el conteo.
+- **Modo en vivo** — guarda tu jugada mientras actúan otros; recalcula al final.
 
 | Botón | Para qué sirve |
 |-------|----------------|
@@ -186,6 +173,21 @@ npm test
 ```
 
 Prueba la lógica del conteo, la estrategia y la entrada de cartas (por ejemplo `A,7` o `10,6,K`).
+
+### Test de tiempo (como en el casino)
+
+En mesas **en vivo online**, lo normal es que tengas unos **10 a 15 segundos** para decidir (algunas mesas dan hasta 20 s). Si se acaba el tiempo, muchas plataformas juegan solas: **piden con 11 o menos** y **se quedan con 12 o más**.
+
+La app no es lenta: el cuello de botella eres tú tocando cartas. El test de tiempo comprueba dos cosas:
+
+1. **Lógica instantánea** — conteo + recomendación en menos de 50 ms.
+2. **Tiempo humano estimado** — un turno típico (dealer + 2 cartas) cabe en 10 s aunque vayas lento.
+
+```bash
+npm run test:timing
+```
+
+Si registras muchas cartas extras o escribes a mano en vez de tocar botones, puede no alcanzar en 10 s; por eso conviene practicar con los botones antes de ir al casino.
 
 ---
 

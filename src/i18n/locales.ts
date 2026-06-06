@@ -27,6 +27,15 @@ export interface Translations {
   };
   dealer: {
     title: string;
+    upcard: string;
+    tapUpcard: string;
+    hole: string;
+    holeHidden: string;
+    holeHint: string;
+    revealHole: string;
+    draw: string;
+    drawHint: string;
+    /** @deprecated use tapUpcard */
     tapCard: string;
   };
   players: {
@@ -50,9 +59,37 @@ export interface Translations {
   strategy: {
     title: string;
     needDealer: string;
+    needCards: string;
     cards: string;
     total: string;
     handLabel: (num: number) => string;
+    tapToHit: string;
+    waitingDealer: string;
+    waitingReveal: string;
+    waitingDraw: string;
+    roundEnd: string;
+    handDone: string;
+  };
+  phases: {
+    opening: string;
+    playerTurn: string;
+    dealerReveal: string;
+    dealerDraw: string;
+    roundEnd: string;
+  };
+  playerActions: {
+    stand: string;
+    split: string;
+    double: string;
+    finishDealer: string;
+    doubleHint: string;
+  };
+  ui: {
+    advanced: string;
+    showPlay: string;
+    hidePlay: string;
+    myHand: string;
+    otherPlayers: string;
   };
   tableMode: {
     title: string;
@@ -122,6 +159,21 @@ export interface Translations {
     emptyCard: string;
     invalidCard: (part: string) => string;
   };
+  practiceTimer: {
+    title: string;
+    description: string;
+    waiting: string;
+    presetLabel: string;
+    start: string;
+    ready: string;
+    tryAgain: string;
+    runningHint: string;
+    success: (seconds: string) => string;
+    timeout: string;
+    autoPlay: (action: string) => string;
+    recommended: (action: string) => string;
+    mismatch: string;
+  };
 }
 
 export const es: Translations = {
@@ -151,7 +203,15 @@ export const es: Translations = {
     insuranceNo: 'NO',
   },
   dealer: {
-    title: 'Carta del dealer',
+    title: 'Dealer',
+    upcard: 'Carta visible',
+    tapUpcard: 'Toca la carta boca arriba',
+    hole: 'Carta oculta',
+    holeHidden: 'Todavía boca abajo',
+    holeHint: 'No sirve para decidir tu jugada; solo para el conteo cuando se ve.',
+    revealHole: 'Volteó — registrar',
+    draw: 'Cartas que pidió',
+    drawHint: 'Cada carta extra del dealer suma al conteo.',
     tapCard: 'Elige la carta que tiene el dealer boca arriba',
   },
   players: {
@@ -174,10 +234,38 @@ export const es: Translations = {
   },
   strategy: {
     title: 'Qué conviene hacer',
-    needDealer: 'Primero elige la carta del dealer para ver qué te conviene.',
+    needDealer: 'Elige la carta visible del dealer.',
+    needCards: 'Agrega tus 2 cartas iniciales.',
     cards: 'Cartas:',
     total: 'Suma:',
     handLabel: (num) => `(Mano ${num})`,
+    tapToHit: 'Toca una carta abajo para PEDIR',
+    waitingDealer: 'Ya te quedaste — espera a que el dealer muestre la oculta',
+    waitingReveal: 'Registra la carta oculta del dealer',
+    waitingDraw: 'Cuenta las cartas que pide el dealer',
+    roundEnd: 'Mano terminada — guarda o empieza otra',
+    handDone: 'Mano cerrada',
+  },
+  phases: {
+    opening: 'Reparto — dealer + tus 2 cartas',
+    playerTurn: 'Tu turno — solo importa la carta visible del dealer',
+    dealerReveal: 'Volteó la oculta — regístrala ahora para el conteo',
+    dealerDraw: 'Dealer pide cartas — agrégalas al conteo',
+    roundEnd: 'Mano terminada',
+  },
+  playerActions: {
+    stand: 'Quedarme',
+    split: 'Separar',
+    double: 'Doblar (+1 carta)',
+    finishDealer: 'Dealer terminó',
+    doubleHint: 'Doblar: agrega 1 carta y cierras la mano',
+  },
+  ui: {
+    advanced: 'Opciones avanzadas',
+    showPlay: 'Ver jugada',
+    hidePlay: 'Ocultar',
+    myHand: 'Mis cartas',
+    otherPlayers: 'Otros jugadores',
   },
   tableMode: {
     title: 'Modo en vivo',
@@ -271,6 +359,22 @@ export const es: Translations = {
     emptyCard: 'Falta una carta. Usa el formato: A,7 o 10,6',
     invalidCard: (part) => `"${part}" no es válida. Usa: A, 2-10, J, Q, K`,
   },
+  practiceTimer: {
+    title: 'Practica contra el reloj',
+    description:
+      'Simula los segundos que tienes en mesas en vivo. Mete dealer y tus cartas, inicia el cronómetro y pulsa Listo cuando termines.',
+    waiting: 'Elige la carta del dealer y al menos 2 cartas tuyas para practicar.',
+    presetLabel: 'Tiempo de mesa:',
+    start: 'Iniciar cronómetro',
+    ready: '¡Listo!',
+    tryAgain: 'Intentar de nuevo',
+    runningHint: 'te queda',
+    success: (seconds) => `Bien: lo hiciste en ${seconds} s`,
+    timeout: 'Se acabó el tiempo — en la mesa habrían jugado por ti',
+    autoPlay: (action) => `Jugada automática típica: ${action}`,
+    recommended: (action) => `Lo que te conviene: ${action}`,
+    mismatch: 'Ojo: la jugada automática no siempre es la mejor. Por eso conviene ir rápido.',
+  },
 };
 
 export const en: Translations = {
@@ -300,7 +404,15 @@ export const en: Translations = {
     insuranceNo: 'NO',
   },
   dealer: {
-    title: 'Dealer Visible Card',
+    title: 'Dealer',
+    upcard: 'Upcard',
+    tapUpcard: 'Tap the face-up card',
+    hole: 'Hole card',
+    holeHidden: 'Still face down',
+    holeHint: 'Not used for your decision — only for the count once visible.',
+    revealHole: 'Revealed — register',
+    draw: 'Dealer hit cards',
+    drawHint: 'Each extra dealer card adds to the count.',
     tapCard: 'Tap a card below',
   },
   players: {
@@ -323,10 +435,38 @@ export const en: Translations = {
   },
   strategy: {
     title: 'Strategy',
-    needDealer: 'Set dealer card to see strategy recommendations.',
+    needDealer: 'Set the dealer upcard first.',
+    needCards: 'Add your first 2 cards.',
     cards: 'Cards:',
     total: 'Total:',
     handLabel: (num) => `(Hand ${num})`,
+    tapToHit: 'Tap a card below to HIT',
+    waitingDealer: 'You stood — wait for dealer hole card',
+    waitingReveal: 'Register the dealer hole card',
+    waitingDraw: 'Add each card the dealer draws',
+    roundEnd: 'Hand over — save or start new',
+    handDone: 'Hand closed',
+  },
+  phases: {
+    opening: 'Deal — dealer + your 2 cards',
+    playerTurn: 'Your turn — only the upcard matters',
+    dealerReveal: 'Hole card revealed — register it for the count',
+    dealerDraw: 'Dealer drawing — add cards to count',
+    roundEnd: 'Hand finished',
+  },
+  playerActions: {
+    stand: 'Stand',
+    split: 'Split',
+    double: 'Double (+1 card)',
+    finishDealer: 'Dealer done',
+    doubleHint: 'Double: add 1 card then hand closes',
+  },
+  ui: {
+    advanced: 'Advanced options',
+    showPlay: 'Show play',
+    hidePlay: 'Hide',
+    myHand: 'My cards',
+    otherPlayers: 'Other players',
   },
   tableMode: {
     title: 'Live Table Mode',
@@ -419,5 +559,21 @@ export const en: Translations = {
   parseCardErrors: {
     emptyCard: 'Empty card value found. Use format: A,7 or 10,6',
     invalidCard: (part) => `"${part}" is not a valid card. Use: A, 2-10, J, Q, K`,
+  },
+  practiceTimer: {
+    title: 'Beat the Clock Practice',
+    description:
+      'Simulate live-table decision time. Enter dealer and your cards, start the timer, tap Ready when done.',
+    waiting: 'Set the dealer card and at least 2 of your cards to practice.',
+    presetLabel: 'Table timer:',
+    start: 'Start timer',
+    ready: 'Ready!',
+    tryAgain: 'Try again',
+    runningHint: 'remaining',
+    success: (seconds) => `Nice: finished in ${seconds}s`,
+    timeout: "Time's up — the table would auto-play for you",
+    autoPlay: (action) => `Typical auto-play: ${action}`,
+    recommended: (action) => `Recommended: ${action}`,
+    mismatch: 'Auto-play is not always optimal — speed matters.',
   },
 };

@@ -49,26 +49,40 @@ export function PlayerHandPanel({
       }`}
     >
       <div className="mb-3 flex items-center justify-between gap-2">
-        <button
-          type="button"
-          onClick={onSetMe}
-          className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${
-            isMe
-              ? 'bg-emerald-600 text-white'
-              : 'bg-gray-700 text-gray-300'
-          }`}
-        >
-          {isMe ? t.players.me : t.players.setAsMe}
-        </button>
-        {canRemove && (
-          <button
-            type="button"
-            onClick={onRemove}
-            className="rounded-lg bg-red-900/60 px-3 py-1.5 text-sm text-red-300"
+        <div className="flex min-w-0 items-center gap-2">
+          <h3
+            className={`truncate text-base font-semibold ${
+              isMe ? 'text-emerald-200' : 'text-gray-100'
+            }`}
           >
-            {t.players.remove}
-          </button>
-        )}
+            {player.name}
+          </h3>
+          {isMe && (
+            <span className="shrink-0 rounded bg-emerald-600 px-2 py-0.5 text-xs font-bold text-white">
+              {t.players.me}
+            </span>
+          )}
+        </div>
+        <div className="flex shrink-0 gap-2">
+          {!isMe && (
+            <button
+              type="button"
+              onClick={onSetMe}
+              className="rounded-lg bg-gray-700 px-3 py-1.5 text-xs font-semibold text-gray-300"
+            >
+              {t.players.setAsMe}
+            </button>
+          )}
+          {canRemove && (
+            <button
+              type="button"
+              onClick={onRemove}
+              className="rounded-lg bg-red-900/60 px-3 py-1.5 text-xs text-red-300"
+            >
+              {t.players.remove}
+            </button>
+          )}
+        </div>
       </div>
 
       {player.hands.map((hand, handIdx) => (
