@@ -111,10 +111,39 @@ export function syncHandStatus(hand: PlayerHand, hasDealerUpcard = true): Player
 
 export function allMyHandsDone(player: Player): boolean {
   return player.hands.every((hand) => {
-    if (hand.cards.length === 0) return true;
+    if (hand.cards.length === 0) return false;
     if (hand.status === 'doubled' && hand.cards.length < 3) return false;
     return hand.status !== 'playing';
   });
+}
+
+/** ¿Terminó el reparto inicial? (2 cartas, o split con 1 en cada mano) */
+export function isInitialDealComplete(player: Player): boolean {
+  if (player.hands.length > 1) {
+    return player.hands.every((h) => h.cards.length >= 1);
+  }
+  return (player.hands[0]?.cards.length ?? 0) >= 2;
+}
+
+export function getDealerHandCards(state: AppState): CardRank[] {
+  const cards: CardRank[] = [];
+  if (state.dealerUpcard) cards.push(state.dealerUpcard);
+  if (state.dealerHoleCard) cards.push(state.dealerHoleCard);
+  cards.push(...state.dealerDrawCards);
+  return cards;
+}
+
+/** Dealer se queda en 17+ o se pasa con 22+ */
+export function isDealerHandComplete(cards: CardRank[]): boolean {
+  if (cards.length < 2) return false;
+  const evaluation = evaluateHand(cards);
+  if (evaluation.isBust) return true;
+  return evaluation.total >= 17;
+}
+
+export function canDealerHit(state: AppState): boolean {
+  if (state.handPhase !== 'dealerDraw' || !state.dealerHoleCard) return false;
+  return !isDealerHandComplete(getDealerHandCards(state));
 }
 
 export function syncHandPhase(state: AppState): HandPhase {
@@ -124,15 +153,19 @@ export function syncHandPhase(state: AppState): HandPhase {
   const me = getMePlayer(state);
   if (!me) return 'opening';
 
+  if (!isInitialDealComplete(me)) return 'opening';
+
   const active = getActiveHandEntry(me, state.activeHandIndex);
-  if (active && active.hand.cards.length > 0 && active.hand.status === 'playing') {
-    if (active.hand.cards.length < 2) return 'opening';
+  if (active && active.hand.status === 'playing') {
     return 'playerTurn';
   }
 
   if (!allMyHandsDone(me)) return 'playerTurn';
 
-  if (!state.dealerHoleRevealed) return 'dealerReveal';
+  if (!state.dealerHoleCard) return 'dealerReveal';
+
+  if (isDealerHandComplete(getDealerHandCards(state))) return 'roundEnd';
+
   return 'dealerDraw';
 }
 

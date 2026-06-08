@@ -46,6 +46,12 @@ export interface Translations {
     drawWhen: string;
     drawLocked: string;
     drawEmpty: string;
+    tableStarts: string;
+    mustHit: string;
+    stands: string;
+    standsDone: string;
+    bust: string;
+    bustDone: string;
     /** @deprecated */
     drawHint: string;
     /** @deprecated use tapUpcard */
@@ -264,6 +270,12 @@ export const es: Translations = {
     drawWhen: 'Si el dealer pide más cartas, agrégalas una por una.',
     drawLocked: 'Primero registra la carta oculta (paso 2).',
     drawEmpty: 'Si se quedó con 2 cartas, no agregues nada y pulsa «Dealer terminó».',
+    tableStarts: 'El dealer reparte primero — empieza por su carta visible.',
+    mustHit: 'Dealer tiene menos de 17 — toca cada carta que saque:',
+    stands: 'Se queda (17+)',
+    standsDone: 'Dealer se quedó en 17 o más. Pulsa «Dealer terminó» o guarda la mano.',
+    bust: 'Se pasó',
+    bustDone: 'Dealer se pasó. Pulsa «Dealer terminó» o guarda la mano.',
     drawHint: 'Cada carta extra del dealer suma al conteo.',
     tapCard: 'Elige la carta que tiene el dealer boca arriba',
   },
@@ -320,7 +332,7 @@ export const es: Translations = {
     showPlay: 'Ver jugada',
     hidePlay: 'Ocultar',
     myHand: 'Mis cartas',
-    myHandWhenOpening: 'Paso 2: agrega tus 2 cartas iniciales (puedes hacerlo antes o después del dealer).',
+    myHandWhenOpening: 'Paso 2: tus 2 cartas iniciales (después de la carta visible del dealer).',
     myHandWhenPlaying: 'Tu turno: pide cartas tocando abajo, o usa los botones Quedarme / Doblar / Separar.',
     myHandWhenDone: 'Mano cerrada — tus cartas siguen visibles para el conteo.',
     otherPlayers: 'Otros jugadores en la mesa',
@@ -332,7 +344,7 @@ export const es: Translations = {
     stepNow: (current, total) => `Paso ${current} de ${total}`,
     hintSetup:
       '¿Baraja nueva? Registra aquí las cartas quemadas (si las viste). Luego dealer visible + tus 2 cartas.',
-    hintDeal: 'Registra la carta visible del dealer (arriba) y tus 2 cartas iniciales (abajo).',
+    hintDeal: 'Arriba: carta visible del dealer. Abajo: tus 2 cartas iniciales.',
     hintPlay:
       'Mira el panel «Qué conviene hacer» → pide, quédate, dobla o separa. La carta oculta del dealer NO va todavía.',
     hintOthers:
@@ -511,6 +523,12 @@ export const en: Translations = {
     drawWhen: 'If the dealer hits, add each card one by one.',
     drawLocked: 'Register the hole card first (step 2).',
     drawEmpty: 'If the dealer stood on 2 cards, add nothing and tap «Dealer done».',
+    tableStarts: 'The dealer deals first — start with the face-up card.',
+    mustHit: 'Dealer has less than 17 — tap each card drawn:',
+    stands: 'Stands (17+)',
+    standsDone: 'Dealer stands on 17+. Tap «Dealer done» or save the round.',
+    bust: 'Bust',
+    bustDone: 'Dealer busted. Tap «Dealer done» or save the round.',
     drawHint: 'Each extra dealer card adds to the count.',
     tapCard: 'Tap a card below',
   },
@@ -567,7 +585,7 @@ export const en: Translations = {
     showPlay: 'Show play',
     hidePlay: 'Hide',
     myHand: 'My cards',
-    myHandWhenOpening: 'Step 2: add your 2 starting cards (before or after the dealer is fine).',
+    myHandWhenOpening: 'Step 2: your 2 starting cards (after the dealer upcard above).',
     myHandWhenPlaying: 'Your turn: tap cards below to hit, or use Stand / Double / Split.',
     myHandWhenDone: 'Hand closed — your cards stay visible for the count.',
     otherPlayers: 'Other players at the table',
@@ -579,7 +597,7 @@ export const en: Translations = {
     stepNow: (current, total) => `Step ${current} of ${total}`,
     hintSetup:
       'New shoe? Log burn cards here (if you saw them). Then dealer upcard + your 2 cards.',
-    hintDeal: 'Set the dealer upcard (above) and your 2 starting cards (below).',
+    hintDeal: 'Above: dealer upcard. Below: your 2 starting cards.',
     hintPlay:
       'Check «Strategy» panel → hit, stand, double, or split. Dealer hole card is NOT entered yet.',
     hintOthers:

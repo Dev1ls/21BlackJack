@@ -7,6 +7,10 @@ interface DealerPanelProps {
   upcard: CardRank | null;
   holeCard: CardRank | null;
   drawCards: CardRank[];
+  dealerTotal: number;
+  dealerComplete: boolean;
+  dealerCanHit: boolean;
+  dealerIsBust: boolean;
   onSetUpcard: (card: CardRank | null) => void;
   onSetHoleCard: (card: CardRank) => void;
   onClearHole: () => void;
@@ -54,6 +58,10 @@ export function DealerPanel({
   upcard,
   holeCard,
   drawCards,
+  dealerTotal,
+  dealerComplete,
+  dealerCanHit,
+  dealerIsBust,
   onSetUpcard,
   onSetHoleCard,
   onClearHole,
@@ -62,18 +70,20 @@ export function DealerPanel({
 }: DealerPanelProps) {
   const { t } = useLocale();
 
-  const upcardActive = handPhase === 'opening' || handPhase === 'playerTurn';
+  const upcardActive = handPhase === 'opening';
   const upcardDone = Boolean(upcard);
   const holeActive = handPhase === 'dealerReveal';
   const holeDone = Boolean(holeCard);
-  const drawActive = handPhase === 'dealerDraw' || handPhase === 'roundEnd';
-  const drawDone = handPhase === 'roundEnd';
+  const drawActive =
+    handPhase === 'dealerDraw' || (handPhase === 'roundEnd' && Boolean(holeCard));
+  const drawDone = dealerComplete && Boolean(holeCard);
+  const showDealerTotal = upcardDone && (holeCard || drawCards.length > 0);
 
   return (
     <section className="rounded-xl border border-gray-700 bg-gray-800/60 p-3">
-      <h2 className="mb-3 text-base font-semibold">{t.dealer.title}</h2>
+      <h2 className="mb-1 text-base font-semibold">{t.dealer.title}</h2>
+      <p className="mb-3 text-xs text-gray-500">{t.dealer.tableStarts}</p>
 
-      {/* Paso A: carta visible */}
       <div
         className={`mb-3 rounded-lg border p-3 ${
           upcardActive
@@ -107,12 +117,8 @@ export function DealerPanel({
             ))}
           </div>
         )}
-        {upcard && upcardActive && (
-          <p className="text-xs text-gray-500">{t.dealer.upcardLocked}</p>
-        )}
       </div>
 
-      {/* Paso B: carta oculta — solo después de tu turno */}
       <div
         className={`mb-3 rounded-lg border p-3 ${
           holeActive
@@ -150,39 +156,47 @@ export function DealerPanel({
             <button
               type="button"
               onClick={onClearHole}
-              className="mb-2 rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-semibold"
+              disabled={handPhase === 'roundEnd'}
+              className="mb-2 rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-semibold disabled:opacity-50"
             >
               {holeCard} ×
             </button>
-            <p className="text-xs text-gray-500">{t.dealer.holeDone}</p>
           </>
         )}
       </div>
 
-      {/* Paso C: cartas extra del dealer */}
       <div
         className={`rounded-lg border p-3 ${
-          drawActive && holeCard
+          drawActive && holeCard && dealerCanHit
             ? 'border-orange-600/60 bg-orange-950/20'
             : 'border-gray-700/80 bg-gray-900/20 opacity-80'
         }`}
       >
         <StepBadge
           number={3}
-          active={drawActive && Boolean(holeCard) && !drawDone}
+          active={drawActive && Boolean(holeCard) && dealerCanHit}
           done={drawDone}
           label={t.dealer.draw}
         />
         <p className="mb-2 text-xs text-gray-400">{t.dealer.drawWhen}</p>
 
-        {(!drawActive || !holeCard) && (
+        {showDealerTotal && (
+          <p className="mb-2 text-sm font-semibold text-orange-200">
+            {t.strategy.total} {dealerTotal}
+            {dealerIsBust && ` — ${t.dealer.bust}`}
+            {dealerComplete && !dealerIsBust && ` — ${t.dealer.stands}`}
+          </p>
+        )}
+
+        {holeCard && !drawActive && !dealerComplete && (
           <p className="rounded-lg bg-gray-800/80 px-2 py-2 text-xs text-gray-500">
             🔒 {t.dealer.drawLocked}
           </p>
         )}
 
-        {drawActive && holeCard && (
+        {drawActive && holeCard && dealerCanHit && (
           <>
+            <p className="mb-2 text-xs font-medium text-orange-200">{t.dealer.mustHit}</p>
             <div className="mb-2 flex flex-wrap gap-1">
               {drawCards.map((card, idx) => (
                 <button
@@ -194,9 +208,6 @@ export function DealerPanel({
                   {card} ×
                 </button>
               ))}
-              {drawCards.length === 0 && (
-                <span className="text-xs text-gray-500">{t.dealer.drawEmpty}</span>
-              )}
             </div>
             <div className="flex flex-wrap gap-1">
               {CARD_RANKS.map((rank) => (
@@ -204,6 +215,12 @@ export function DealerPanel({
               ))}
             </div>
           </>
+        )}
+
+        {drawActive && holeCard && dealerComplete && (
+          <p className="rounded-lg bg-gray-800/80 px-2 py-2 text-xs text-emerald-300/90">
+            {dealerIsBust ? t.dealer.bustDone : t.dealer.standsDone}
+          </p>
         )}
       </div>
     </section>

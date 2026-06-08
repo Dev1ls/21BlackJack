@@ -1,4 +1,4 @@
-import { getMeHandDisplay } from './handPhase';
+import { isInitialDealComplete, getMePlayer } from './handPhase';
 import type { AppState } from '../types/blackjack';
 
 export type FlowStepId =
@@ -54,17 +54,16 @@ export function getVisibleFlowSteps(hasOtherPlayers: boolean): FlowStep[] {
 }
 
 export function getCurrentFlowStep(state: AppState): FlowStepId {
-  const meCards = getMeHandDisplay(state).cards;
-
   if (state.handPhase === 'roundEnd') return 'save';
   if (state.handPhase === 'dealerDraw') return 'draw';
   if (state.handPhase === 'dealerReveal') return 'hole';
   if (state.handPhase === 'playerTurn') return 'play';
 
+  const me = getMePlayer(state);
   if (state.savedRounds.length === 0 && state.extraCards.length === 0 && !state.dealerUpcard) {
     return 'setup';
   }
-  if (!state.dealerUpcard || meCards.length < 2) return 'deal';
+  if (!state.dealerUpcard || !me || !isInitialDealComplete(me)) return 'deal';
   return 'deal';
 }
 

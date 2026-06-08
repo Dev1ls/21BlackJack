@@ -21,14 +21,18 @@ import { evaluateHand, getStrategy } from './lib/blackjack';
 import { calculateCountStats } from './lib/count';
 import {
   applyPlayerUpdates,
+  canDealerHit,
   collectAllSeenCards,
   collectCurrentRoundCards,
   getActiveHandEntry,
+  getDealerHandCards,
   getMeHandDisplay,
   getMePlayer,
+  isDealerHandComplete,
   newRoundPatch,
   nextActiveHandIndex,
   splitPlayerHand,
+  syncHandPhase,
 } from './lib/handPhase';
 import { loadState, saveState } from './lib/storage';
 import {
@@ -119,13 +123,26 @@ export default function App() {
 
   const handleMeAddCard = (card: CardRank) => {
     applyPlayersUpdate((prev) => {
+      if (prev.handPhase !== 'opening' && prev.handPhase !== 'playerTurn') {
+        return { players: prev.players };
+      }
       const me = getMePlayer(prev);
       if (!me) return { players: prev.players };
+
+      let index = prev.activeHandIndex;
       const entry = getActiveHandEntry(me, prev.activeHandIndex);
-      if (!entry) return { players: prev.players };
-      const { index } = entry;
+      if (entry) {
+        index = entry.index;
+      } else if (prev.handPhase === 'opening') {
+        index = Math.min(prev.activeHandIndex, me.hands.length - 1);
+      } else {
+        return { players: prev.players };
+      }
+
       const hand = me.hands[index];
-      if (hand.status === 'doubled' && hand.cards.length >= 3) return { players: prev.players };
+      if (hand?.status === 'doubled' && hand.cards.length >= 3) {
+        return { players: prev.players };
+      }
 
       const players = prev.players.map((p) => {
         if (p.id !== me.id) return p;
@@ -241,10 +258,14 @@ export default function App() {
   };
 
   const handleSetHoleCard = (card: CardRank) => {
-    update({
-      dealerHoleCard: card,
-      dealerHoleRevealed: true,
-      handPhase: 'dealerDraw',
+    update((prev) => {
+      const patch: Partial<AppState> = {
+        dealerHoleCard: card,
+        dealerHoleRevealed: true,
+      };
+      const nextCards = getDealerHandCards({ ...prev, ...patch, dealerDrawCards: prev.dealerDrawCards });
+      patch.handPhase = isDealerHandComplete(nextCards) ? 'roundEnd' : 'dealerDraw';
+      return patch;
     });
   };
 
@@ -302,6 +323,23 @@ export default function App() {
 
   const otherPlayers = state.players.filter((p) => p.id !== state.mePlayerId);
   const hasOtherPlayers = otherPlayers.length > 0;
+  const dealerHandCards = getDealerHandCards(state);
+  const dealerHandEval = evaluateHand(dealerHandCards);
+  const dealerComplete = isDealerHandComplete(dealerHandCards);
+  const dealerCanHit = canDealerHit(state);
+
+  const handleAddDealerDrawCard = (card: CardRank) => {
+    update((prev) => {
+      if (!canDealerHit(prev)) return {};
+      const drawCards = [...prev.dealerDrawCards, card];
+      const nextCards = getDealerHandCards({ ...prev, dealerDrawCards: drawCards });
+      const patch: Partial<AppState> = { dealerDrawCards: drawCards };
+      if (isDealerHandComplete(nextCards)) {
+        patch.handPhase = 'roundEnd';
+      }
+      return patch;
+    });
+  };
 
   const sidebar = (
     <aside className="space-y-3 lg:sticky lg:top-3 lg:self-start">
@@ -424,6 +462,31 @@ export default function App() {
             />
           )}
 
+          <DealerPanel
+            handPhase={state.handPhase}
+            upcard={state.dealerUpcard}
+            holeCard={state.dealerHoleCard}
+            drawCards={state.dealerDrawCards}
+            dealerTotal={dealerHandEval.total}
+            dealerComplete={dealerComplete}
+            dealerCanHit={dealerCanHit}
+            dealerIsBust={dealerHandEval.isBust}
+            onSetUpcard={handleSetUpcard}
+            onSetHoleCard={handleSetHoleCard}
+            onClearHole={handleClearHole}
+            onAddDrawCard={handleAddDealerDrawCard}
+            onRemoveDrawCard={(idx) =>
+              update((prev) => {
+                const drawCards = prev.dealerDrawCards.filter((_, i) => i !== idx);
+                const next = { ...prev, dealerDrawCards: drawCards };
+                return {
+                  dealerDrawCards: drawCards,
+                  handPhase: syncHandPhase(next),
+                };
+              })
+            }
+          />
+
           {mePlayer && (
             <QuickMePanel
               handPhase={state.handPhase}
@@ -434,24 +497,6 @@ export default function App() {
               onRemoveCard={handleMeRemoveCard}
             />
           )}
-
-          <DealerPanel
-            handPhase={state.handPhase}
-            upcard={state.dealerUpcard}
-            holeCard={state.dealerHoleCard}
-            drawCards={state.dealerDrawCards}
-            onSetUpcard={handleSetUpcard}
-            onSetHoleCard={handleSetHoleCard}
-            onClearHole={handleClearHole}
-            onAddDrawCard={(card) =>
-              update((prev) => ({ dealerDrawCards: [...prev.dealerDrawCards, card] }))
-            }
-            onRemoveDrawCard={(idx) =>
-              update((prev) => ({
-                dealerDrawCards: prev.dealerDrawCards.filter((_, i) => i !== idx),
-              }))
-            }
-          />
 
           {hasOtherPlayers && (
             <CollapsibleSection title={t.ui.otherPlayers}>
