@@ -69,7 +69,7 @@ export const CARD_RANKS: CardRank[] = [
 export const DEFAULT_DECK_COUNT = 8;
 export const MIN_PLAYERS = 1;
 export const MAX_PLAYERS = 5;
-export const DEFAULT_PLAYER_COUNT = 2;
+export const DEFAULT_PLAYER_COUNT = 1;
 
 /** @deprecated Legacy field — migrated to dealerUpcard in loadState */
 export type LegacyAppState = AppState & { dealerCard?: CardRank | null };

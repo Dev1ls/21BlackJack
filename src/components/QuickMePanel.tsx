@@ -24,12 +24,20 @@ export function QuickMePanel({
   const canEdit = handPhase === 'opening' || handPhase === 'playerTurn';
   const evaluation = evaluateHand(cards);
 
+  const stepHint =
+    handPhase === 'opening'
+      ? t.ui.myHandWhenOpening
+      : handPhase === 'playerTurn'
+        ? t.ui.myHandWhenPlaying
+        : t.ui.myHandWhenDone;
+
   return (
     <section className="rounded-xl border border-emerald-700 bg-emerald-950/20 p-3">
-      <h2 className="mb-2 text-base font-semibold text-emerald-200">
+      <h2 className="mb-1 text-base font-semibold text-emerald-200">
         {t.ui.myHand}
         {handCount > 1 ? ` ${t.players.hand(handIndex + 1)}` : ''}
       </h2>
+      <p className="mb-2 text-xs leading-relaxed text-emerald-200/70">{stepHint}</p>
 
       <div className="mb-2 flex flex-wrap gap-1">
         {cards.map((card, idx) => (

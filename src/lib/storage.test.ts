@@ -7,7 +7,7 @@ describe('getDefaultState', () => {
   it('starts with Spanish player names', () => {
     const state = getDefaultState();
     expect(state.players[0].name).toBe('Jugador 1');
-    expect(state.players[1].name).toBe('Jugador 2');
+    expect(state.players.length).toBe(1);
   });
 
   it('respects player count limits', () => {

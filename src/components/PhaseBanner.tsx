@@ -1,5 +1,6 @@
 import { useLocale } from '../i18n';
-import type { HandPhase } from '../types/blackjack';
+import { getCurrentFlowStep, getFlowHint, getVisibleFlowSteps } from '../lib/flowGuide';
+import type { AppState, HandPhase } from '../types/blackjack';
 
 const PHASE_COLORS: Record<HandPhase, string> = {
   opening: 'border-blue-600 bg-blue-950/40 text-blue-200',
@@ -11,14 +12,26 @@ const PHASE_COLORS: Record<HandPhase, string> = {
 
 interface PhaseBannerProps {
   phase: HandPhase;
+  state: AppState;
+  hasOtherPlayers: boolean;
 }
 
-export function PhaseBanner({ phase }: PhaseBannerProps) {
+export function PhaseBanner({ phase, state, hasOtherPlayers }: PhaseBannerProps) {
   const { t } = useLocale();
+  const current = getCurrentFlowStep(state);
+  const hint = getFlowHint(current, t.flowGuide);
+  const steps = getVisibleFlowSteps(hasOtherPlayers);
+  const stepNum = steps.findIndex((s) => s.id === current) + 1;
 
   return (
-    <div className={`rounded-lg border px-3 py-2 text-sm font-medium ${PHASE_COLORS[phase]}`}>
-      {t.phases[phase]}
+    <div className={`rounded-lg border px-3 py-2 ${PHASE_COLORS[phase]}`}>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded bg-black/25 px-2 py-0.5 text-xs font-bold">
+          {t.flowGuide.stepNow(stepNum, steps.length)}
+        </span>
+        <span className="text-sm font-medium">{t.phases[phase]}</span>
+      </div>
+      <p className="mt-1 text-xs leading-relaxed opacity-90">{hint}</p>
     </div>
   );
 }

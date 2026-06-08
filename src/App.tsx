@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CollapsibleSection } from './components/CollapsibleSection';
 import { DealerPanel } from './components/DealerPanel';
 import { ExplanationPanel } from './components/ExplanationPanel';
+import { ExtraCardsPanel } from './components/ExtraCardsPanel';
+import { HandFlowGuide } from './components/HandFlowGuide';
 import { MobileStrategyBar } from './components/MobileStrategyBar';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { PhaseBanner } from './components/PhaseBanner';
@@ -12,7 +14,6 @@ import { QuickMePanel } from './components/QuickMePanel';
 import { RoundControls } from './components/RoundControls';
 import { StrategyHero } from './components/StrategyHero';
 import { TableModePanel } from './components/TableModePanel';
-import { CardButton } from './components/CardButton';
 import { useLocale } from './i18n';
 import type { Locale } from './i18n/types';
 import { applyTheme, loadTheme, saveTheme, type AppTheme } from './lib/theme';
@@ -31,7 +32,6 @@ import {
 } from './lib/handPhase';
 import { loadState, saveState } from './lib/storage';
 import {
-  CARD_RANKS,
   MAX_PLAYERS,
   MIN_PLAYERS,
   type AppState,
@@ -240,10 +240,6 @@ export default function App() {
     });
   };
 
-  const handleStartReveal = () => {
-    update({ dealerHoleRevealed: true, handPhase: 'dealerReveal' });
-  };
-
   const handleSetHoleCard = (card: CardRank) => {
     update({
       dealerHoleCard: card,
@@ -305,6 +301,7 @@ export default function App() {
   };
 
   const otherPlayers = state.players.filter((p) => p.id !== state.mePlayerId);
+  const hasOtherPlayers = otherPlayers.length > 0;
 
   const sidebar = (
     <aside className="space-y-3 lg:sticky lg:top-3 lg:self-start">
@@ -388,10 +385,12 @@ export default function App() {
         </div>
       </header>
 
-      <PhaseBanner phase={state.handPhase} />
+      <PhaseBanner phase={state.handPhase} state={state} hasOtherPlayers={hasOtherPlayers} />
 
       <div className="mt-3 grid gap-4 lg:grid-cols-[1fr_300px]">
         <main className="space-y-3">
+          <HandFlowGuide state={state} hasOtherPlayers={hasOtherPlayers} />
+
           <section className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-700 bg-gray-800/60 px-3 py-2">
             <span className="text-sm text-gray-400">{t.shoe.decks}</span>
             <button
@@ -412,25 +411,18 @@ export default function App() {
             <span className="text-xs text-gray-500">{t.shoe.hint}</span>
           </section>
 
-          <DealerPanel
-            handPhase={state.handPhase}
-            upcard={state.dealerUpcard}
-            holeCard={state.dealerHoleCard}
-            holeRevealed={state.dealerHoleRevealed}
-            drawCards={state.dealerDrawCards}
-            onSetUpcard={handleSetUpcard}
-            onStartReveal={handleStartReveal}
-            onSetHoleCard={handleSetHoleCard}
-            onClearHole={handleClearHole}
-            onAddDrawCard={(card) =>
-              update((prev) => ({ dealerDrawCards: [...prev.dealerDrawCards, card] }))
-            }
-            onRemoveDrawCard={(idx) =>
-              update((prev) => ({
-                dealerDrawCards: prev.dealerDrawCards.filter((_, i) => i !== idx),
-              }))
-            }
-          />
+          {(state.savedRounds.length === 0 || state.extraCards.length > 0) && (
+            <ExtraCardsPanel
+              cards={state.extraCards}
+              onAdd={(r) => update((prev) => ({ extraCards: [...prev.extraCards, r] }))}
+              onRemove={(idx) =>
+                update((prev) => ({
+                  extraCards: prev.extraCards.filter((_, i) => i !== idx),
+                }))
+              }
+              compact={state.extraCards.length === 0 && Boolean(state.dealerUpcard)}
+            />
+          )}
 
           {mePlayer && (
             <QuickMePanel
@@ -443,8 +435,27 @@ export default function App() {
             />
           )}
 
-          {otherPlayers.length > 0 && (
+          <DealerPanel
+            handPhase={state.handPhase}
+            upcard={state.dealerUpcard}
+            holeCard={state.dealerHoleCard}
+            drawCards={state.dealerDrawCards}
+            onSetUpcard={handleSetUpcard}
+            onSetHoleCard={handleSetHoleCard}
+            onClearHole={handleClearHole}
+            onAddDrawCard={(card) =>
+              update((prev) => ({ dealerDrawCards: [...prev.dealerDrawCards, card] }))
+            }
+            onRemoveDrawCard={(idx) =>
+              update((prev) => ({
+                dealerDrawCards: prev.dealerDrawCards.filter((_, i) => i !== idx),
+              }))
+            }
+          />
+
+          {hasOtherPlayers && (
             <CollapsibleSection title={t.ui.otherPlayers}>
+              <p className="mb-2 text-xs text-gray-500">{t.ui.otherPlayersHint}</p>
               <div className="space-y-3">
                 {otherPlayers.map((player) => (
                   <PlayerHandPanel
@@ -480,37 +491,6 @@ export default function App() {
 
           <CollapsibleSection title={t.ui.advanced}>
             <div className="space-y-3">
-              <section>
-                <h3 className="mb-2 text-sm font-semibold">{t.extraCards.title}</h3>
-                <p className="mb-2 text-xs text-gray-500">{t.extraCards.hint}</p>
-                <div className="mb-2 flex flex-wrap gap-1">
-                  {state.extraCards.map((card, idx) => (
-                    <button
-                      key={`extra-${idx}`}
-                      type="button"
-                      onClick={() =>
-                        update({
-                          extraCards: state.extraCards.filter((_, i) => i !== idx),
-                        })
-                      }
-                      className="rounded-lg border border-gray-600 bg-gray-700 px-2 py-1 text-sm"
-                    >
-                      {card} ×
-                    </button>
-                  ))}
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {CARD_RANKS.map((rank) => (
-                    <CardButton
-                      key={`extra-${rank}`}
-                      rank={rank}
-                      size="sm"
-                      onClick={(r) => update({ extraCards: [...state.extraCards, r] })}
-                    />
-                  ))}
-                </div>
-              </section>
-
               <TableModePanel
                 players={state.players}
                 mePlayerId={state.mePlayerId}

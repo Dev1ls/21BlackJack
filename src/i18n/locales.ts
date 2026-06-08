@@ -28,12 +28,25 @@ export interface Translations {
   dealer: {
     title: string;
     upcard: string;
+    upcardWhen: string;
+    upcardLocked: string;
     tapUpcard: string;
     hole: string;
+    holeWhen: string;
+    holeNow: string;
+    holeLocked: string;
+    holeDone: string;
+    /** @deprecated */
     holeHidden: string;
+    /** @deprecated */
     holeHint: string;
+    /** @deprecated */
     revealHole: string;
     draw: string;
+    drawWhen: string;
+    drawLocked: string;
+    drawEmpty: string;
+    /** @deprecated */
     drawHint: string;
     /** @deprecated use tapUpcard */
     tapCard: string;
@@ -55,6 +68,7 @@ export interface Translations {
   extraCards: {
     title: string;
     hint: string;
+    burnNote: string;
   };
   strategy: {
     title: string;
@@ -89,7 +103,32 @@ export interface Translations {
     showPlay: string;
     hidePlay: string;
     myHand: string;
+    myHandWhenOpening: string;
+    myHandWhenPlaying: string;
+    myHandWhenDone: string;
     otherPlayers: string;
+    otherPlayersHint: string;
+  };
+  flowGuide: {
+    title: string;
+    optional: string;
+    stepNow: (current: number, total: number) => string;
+    hintSetup: string;
+    hintDeal: string;
+    hintPlay: string;
+    hintOthers: string;
+    hintHole: string;
+    hintDraw: string;
+    hintSave: string;
+    steps: {
+      setup: string;
+      deal: string;
+      play: string;
+      others: string;
+      hole: string;
+      draw: string;
+      save: string;
+    };
   };
   tableMode: {
     title: string;
@@ -209,13 +248,22 @@ export const es: Translations = {
   },
   dealer: {
     title: 'Dealer',
-    upcard: 'Carta visible',
-    tapUpcard: 'Toca la carta boca arriba',
-    hole: 'Carta oculta',
+    upcard: 'Carta visible (boca arriba)',
+    upcardWhen: 'Al inicio de la mano — antes de decidir qué hacer.',
+    upcardLocked: 'Ya registrada. Para cambiarla, usa «Nueva mano» abajo.',
+    tapUpcard: '👇 Toca la carta que ves boca arriba',
+    hole: 'Carta oculta (boca abajo)',
+    holeWhen: 'NO es ahora. Solo cuando termines tú y el dealer voltee.',
+    holeNow: '👇 El dealer volteó. Toca cuál era la carta oculta:',
+    holeLocked: 'Aparece solo después de que te quedes, pidas, dobles o te pases.',
+    holeDone: 'Registrada — ahora cuenta las cartas que pida el dealer.',
     holeHidden: 'Todavía boca abajo',
     holeHint: 'No sirve para decidir tu jugada; solo para el conteo cuando se ve.',
     revealHole: 'Volteó — registrar',
-    draw: 'Cartas que pidió',
+    draw: 'Cartas que pide el dealer',
+    drawWhen: 'Si el dealer pide más cartas, agrégalas una por una.',
+    drawLocked: 'Primero registra la carta oculta (paso 2).',
+    drawEmpty: 'Si se quedó con 2 cartas, no agregues nada y pulsa «Dealer terminó».',
     drawHint: 'Cada carta extra del dealer suma al conteo.',
     tapCard: 'Elige la carta que tiene el dealer boca arriba',
   },
@@ -234,8 +282,10 @@ export const es: Translations = {
     current: 'Tienes:',
   },
   extraCards: {
-    title: 'Otras cartas que viste',
-    hint: 'Cartas de otros jugadores, las que botaron, quemadas, etc.',
+    title: 'Cartas extra para el conteo',
+    hint: 'Todo lo visible que NO está en dealer ni en tu mano: quemadas al cambiar baraja, descartes, cartas de vecinos, etc.',
+    burnNote:
+      '🔥 Cartas quemadas: al empezar una baraja nueva o tras barajar, el dealer suele quemar 1 carta (a veces más). Regístrala aquí — no hace falta tener otros jugadores.',
   },
   strategy: {
     title: 'Qué conviene hacer',
@@ -270,7 +320,37 @@ export const es: Translations = {
     showPlay: 'Ver jugada',
     hidePlay: 'Ocultar',
     myHand: 'Mis cartas',
-    otherPlayers: 'Otros jugadores',
+    myHandWhenOpening: 'Paso 2: agrega tus 2 cartas iniciales (puedes hacerlo antes o después del dealer).',
+    myHandWhenPlaying: 'Tu turno: pide cartas tocando abajo, o usa los botones Quedarme / Doblar / Separar.',
+    myHandWhenDone: 'Mano cerrada — tus cartas siguen visibles para el conteo.',
+    otherPlayers: 'Otros jugadores en la mesa',
+    otherPlayersHint: 'Opcional. Solo si hay más gente: sus cartas visibles mejoran el conteo.',
+  },
+  flowGuide: {
+    title: 'Orden de la mano',
+    optional: '(opc.)',
+    stepNow: (current, total) => `Paso ${current} de ${total}`,
+    hintSetup:
+      '¿Baraja nueva? Registra aquí las cartas quemadas (si las viste). Luego dealer visible + tus 2 cartas.',
+    hintDeal: 'Registra la carta visible del dealer (arriba) y tus 2 cartas iniciales (abajo).',
+    hintPlay:
+      'Mira el panel «Qué conviene hacer» → pide, quédate, dobla o separa. La carta oculta del dealer NO va todavía.',
+    hintOthers:
+      'Si hay más jugadores, registra sus cartas visibles. Mejora el conteo antes de que te toque.',
+    hintHole:
+      'Ya terminaste tú. El dealer volteó la oculta → tócala en la sección Dealer, paso 2.',
+    hintDraw:
+      'El dealer pide cartas → agrégalas en paso 3. Si no pidió más, pulsa «Dealer terminó».',
+    hintSave: 'Mano lista. «Guardar mano» suma todo al conteo de la baraja, o «Nueva mano» para la siguiente.',
+    steps: {
+      setup: 'Baraja / quemadas',
+      deal: 'Reparto',
+      play: 'Tu jugada',
+      others: 'Otros jugadores',
+      hole: 'Oculta dealer',
+      draw: 'Dealer pide',
+      save: 'Guardar',
+    },
   },
   tableMode: {
     title: 'Modo en vivo',
@@ -415,13 +495,22 @@ export const en: Translations = {
   },
   dealer: {
     title: 'Dealer',
-    upcard: 'Upcard',
-    tapUpcard: 'Tap the face-up card',
-    hole: 'Hole card',
+    upcard: 'Upcard (face up)',
+    upcardWhen: 'At the start of the hand — before you decide what to do.',
+    upcardLocked: 'Already set. To change it, use «New Round» below.',
+    tapUpcard: '👇 Tap the face-up card you see',
+    hole: 'Hole card (face down)',
+    holeWhen: 'NOT yet. Only after you finish and the dealer flips it.',
+    holeNow: '👇 Dealer flipped. Tap what the hole card was:',
+    holeLocked: 'Unlocks after you stand, hit to finish, double, or bust.',
+    holeDone: 'Registered — now add any cards the dealer draws.',
     holeHidden: 'Still face down',
     holeHint: 'Not used for your decision — only for the count once visible.',
     revealHole: 'Revealed — register',
-    draw: 'Dealer hit cards',
+    draw: 'Cards the dealer draws',
+    drawWhen: 'If the dealer hits, add each card one by one.',
+    drawLocked: 'Register the hole card first (step 2).',
+    drawEmpty: 'If the dealer stood on 2 cards, add nothing and tap «Dealer done».',
     drawHint: 'Each extra dealer card adds to the count.',
     tapCard: 'Tap a card below',
   },
@@ -440,8 +529,10 @@ export const en: Translations = {
     current: 'Current:',
   },
   extraCards: {
-    title: 'Extra Visible Cards',
-    hint: 'Discards, other players, burn cards, etc.',
+    title: 'Extra cards for the count',
+    hint: 'Anything visible NOT in dealer or your hand: burn cards on shuffle, discards, neighbors, etc.',
+    burnNote:
+      '🔥 Burn cards: when a new shoe starts, the dealer usually burns 1 card (sometimes more). Log it here — you do NOT need other players at the table.',
   },
   strategy: {
     title: 'Strategy',
@@ -476,7 +567,37 @@ export const en: Translations = {
     showPlay: 'Show play',
     hidePlay: 'Hide',
     myHand: 'My cards',
-    otherPlayers: 'Other players',
+    myHandWhenOpening: 'Step 2: add your 2 starting cards (before or after the dealer is fine).',
+    myHandWhenPlaying: 'Your turn: tap cards below to hit, or use Stand / Double / Split.',
+    myHandWhenDone: 'Hand closed — your cards stay visible for the count.',
+    otherPlayers: 'Other players at the table',
+    otherPlayersHint: 'Optional. Only if others are playing — their visible cards improve the count.',
+  },
+  flowGuide: {
+    title: 'Hand order',
+    optional: '(opt.)',
+    stepNow: (current, total) => `Step ${current} of ${total}`,
+    hintSetup:
+      'New shoe? Log burn cards here (if you saw them). Then dealer upcard + your 2 cards.',
+    hintDeal: 'Set the dealer upcard (above) and your 2 starting cards (below).',
+    hintPlay:
+      'Check «Strategy» panel → hit, stand, double, or split. Dealer hole card is NOT entered yet.',
+    hintOthers:
+      'If others are at the table, log their visible cards. Better count before your turn.',
+    hintHole:
+      'You are done. Dealer flipped the hole card → tap it in Dealer section, step 2.',
+    hintDraw:
+      'Dealer hits → add cards in step 3. If no hits, tap «Dealer done».',
+    hintSave: 'Hand complete. «Save Round» adds everything to the shoe count, or «New Round» for the next.',
+    steps: {
+      setup: 'Shoe / burns',
+      deal: 'Deal',
+      play: 'Your play',
+      others: 'Other players',
+      hole: 'Dealer hole',
+      draw: 'Dealer hits',
+      save: 'Save',
+    },
   },
   tableMode: {
     title: 'Live Table Mode',
