@@ -29,6 +29,7 @@ export function ExtraCardsPanel({ cards, onAdd, onRemove, compact = false }: Ext
               key={`extra-${idx}`}
               type="button"
               onClick={() => onRemove(idx)}
+              aria-label={t.a11y.removeCard(t.a11y.card(card))}
               className="rounded-lg border border-amber-700/60 bg-gray-800 px-2 py-1 text-sm font-semibold"
             >
               {card} ×

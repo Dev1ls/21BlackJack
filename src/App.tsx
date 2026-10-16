@@ -9,6 +9,7 @@ import { OfflineIndicator } from './components/OfflineIndicator';
 import { PhaseBanner } from './components/PhaseBanner';
 import { PlayerActions } from './components/PlayerActions';
 import { PlayerHandPanel } from './components/PlayerHand';
+import { PracticeNotice } from './components/PracticeNotice';
 import { PracticeTimer } from './components/PracticeTimer';
 import { QuickMePanel } from './components/QuickMePanel';
 import { RoundControls } from './components/RoundControls';
@@ -34,7 +35,7 @@ import {
   splitPlayerHand,
   syncHandPhase,
 } from './lib/handPhase';
-import { loadState, saveState } from './lib/storage';
+import { capSavedRounds, loadState, saveState, type SaveResult } from './lib/storage';
 import {
   MAX_PLAYERS,
   MIN_PLAYERS,
@@ -50,6 +51,7 @@ export default function App() {
   const [showMobilePlay, setShowMobilePlay] = useState(true);
   const [showExplanation, setShowExplanation] = useState(false);
   const [appTheme, setAppTheme] = useState<AppTheme>(loadTheme);
+  const [saveResult, setSaveResult] = useState<SaveResult>('ok');
 
   useEffect(() => {
     applyTheme(appTheme);
@@ -61,7 +63,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    saveState(state);
+    setSaveResult(saveState(state));
   }, [state]);
 
   const allSeenCards = useMemo(() => collectAllSeenCards(state), [state]);
@@ -282,10 +284,10 @@ export default function App() {
       const currentCards = collectCurrentRoundCards(prev);
       if (currentCards.length === 0) return {};
       return {
-        savedRounds: [
+        savedRounds: capSavedRounds([
           ...prev.savedRounds,
           { id: `round-${Date.now()}`, timestamp: Date.now(), cards: currentCards },
-        ],
+        ]),
         ...newRoundPatch(prev),
       };
     });
@@ -375,6 +377,16 @@ export default function App() {
   return (
     <div className="mx-auto min-h-dvh max-w-6xl px-3 pb-24 pt-3 lg:pb-8">
       <OfflineIndicator />
+      <PracticeNotice />
+
+      {saveResult !== 'ok' && (
+        <p
+          role="status"
+          className="mb-3 rounded-lg border border-amber-600 bg-amber-950/60 px-3 py-2 text-xs text-amber-50"
+        >
+          {saveResult === 'trimmed' ? t.a11y.saveTrimmed : t.a11y.saveFailed}
+        </p>
+      )}
 
       <header className="mb-3 flex items-start justify-between gap-3">
         <div>
@@ -382,14 +394,15 @@ export default function App() {
           <p className="text-xs text-gray-400 sm:text-sm">{t.app.subtitle}</p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-start">
-          <div>
-            <label className="mb-1 block text-right text-xs text-gray-500">{t.theme.label}</label>
+          <div role="group" aria-label={t.theme.label}>
+            <span className="mb-1 block text-right text-xs text-gray-300">{t.theme.label}</span>
             <div className="flex gap-1">
               {(['classic', 'casino'] as AppTheme[]).map((code) => (
                 <button
                   key={code}
                   type="button"
                   onClick={() => setTheme(code)}
+                  aria-pressed={appTheme === code}
                   className={`rounded-lg px-2 py-1 text-xs font-semibold ${
                     appTheme === code
                       ? code === 'casino'
@@ -403,14 +416,15 @@ export default function App() {
               ))}
             </div>
           </div>
-          <div>
-            <label className="mb-1 block text-right text-xs text-gray-500">{t.language.label}</label>
+          <div role="group" aria-label={t.language.label}>
+            <span className="mb-1 block text-right text-xs text-gray-300">{t.language.label}</span>
           <div className="flex gap-1">
             {(['es', 'en'] as Locale[]).map((code) => (
               <button
                 key={code}
                 type="button"
                 onClick={() => setLocale(code)}
+                aria-pressed={locale === code}
                 className={`rounded-lg px-2 py-1 text-xs font-semibold ${
                   locale === code ? 'bg-emerald-600 text-white' : 'bg-gray-700 text-gray-300'
                 }`}
@@ -434,6 +448,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => handleDeckCountChange(state.deckCount - 1)}
+              aria-label={t.a11y.decreaseDecks}
               className="h-9 w-9 rounded-lg bg-gray-700 font-bold"
             >
               −
@@ -442,11 +457,12 @@ export default function App() {
             <button
               type="button"
               onClick={() => handleDeckCountChange(state.deckCount + 1)}
+              aria-label={t.a11y.increaseDecks}
               className="h-9 w-9 rounded-lg bg-gray-700 font-bold"
             >
               +
             </button>
-            <span className="text-xs text-gray-500">{t.shoe.hint}</span>
+            <span className="text-xs text-gray-300">{t.shoe.hint}</span>
           </section>
 
           {(state.savedRounds.length === 0 || state.extraCards.length > 0) && (
@@ -500,7 +516,7 @@ export default function App() {
 
           {hasOtherPlayers && (
             <CollapsibleSection title={t.ui.otherPlayers}>
-              <p className="mb-2 text-xs text-gray-500">{t.ui.otherPlayersHint}</p>
+              <p className="mb-2 text-xs text-gray-300">{t.ui.otherPlayersHint}</p>
               <div className="space-y-3">
                 {otherPlayers.map((player) => (
                   <PlayerHandPanel
@@ -550,6 +566,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setShowExplanation((v) => !v)}
+                aria-expanded={showExplanation}
                 className="w-full rounded-lg border border-gray-600 py-2 text-sm text-gray-300"
               >
                 {showExplanation ? t.explanation.hide : t.explanation.show}

@@ -115,6 +115,8 @@ export function PracticeTimer({
             type="button"
             disabled={phase === 'running'}
             onClick={() => setPreset(sec)}
+            aria-pressed={preset === sec}
+            aria-label={t.a11y.timerSeconds(sec)}
             className={`rounded-lg px-3 py-1.5 text-sm font-semibold disabled:opacity-50 ${
               preset === sec ? 'bg-orange-600 text-white' : 'bg-gray-700 text-gray-300'
             }`}
@@ -132,7 +134,14 @@ export function PracticeTimer({
             </span>
             <span className="text-sm text-gray-400">{t.practiceTimer.runningHint}</span>
           </div>
-          <div className="h-3 overflow-hidden rounded-full bg-gray-800">
+          <div
+            className="h-3 overflow-hidden rounded-full bg-gray-800"
+            role="progressbar"
+            aria-label={t.a11y.progress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(snapshot.progress * 100)}
+          >
             <div
               className={`h-full transition-all duration-100 ${timerBarColor(snapshot.urgency)}`}
               style={{ width: `${snapshot.progress * 100}%` }}

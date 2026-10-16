@@ -38,13 +38,13 @@ describe('Tiempo humano estimado (toques en pantalla)', () => {
     expect(fastMs).toBeLessThan(5_000);
   });
 
-  it('modo en vivo con cartas extra de otros jugadores cabe en 15 s yendo lento', () => {
-    const liveTableTurn: TurnInputPlan = {
+  it('simulación con cartas extra de otros jugadores cabe en 15 s yendo lento', () => {
+    const simulatedTurn: TurnInputPlan = {
       cardTaps: 3,
       extraCardTaps: 4,
       lockPreliminary: true,
     };
-    const slowMs = estimateTurnInputTimeMs(liveTableTurn, 'slow');
+    const slowMs = estimateTurnInputTimeMs(simulatedTurn, 'slow');
     expect(slowMs).toBeLessThan(COMMON_MAX_DECISION_BUDGET_MS);
   });
 
@@ -118,7 +118,7 @@ describe('Velocidad de la lógica de la app', () => {
   });
 });
 
-describe('Si se acaba el tiempo en la mesa', () => {
+describe('Si se acaba el tiempo de práctica', () => {
   it('auto-pide con 11 o menos', () => {
     expect(timeoutFallbackAction(11)).toBe('HIT');
     expect(timeoutFallbackAction(9)).toBe('HIT');

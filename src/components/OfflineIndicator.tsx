@@ -21,7 +21,7 @@ export function OfflineIndicator() {
   if (isOnline) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-amber-900 px-4 py-2 text-center text-sm font-semibold text-amber-200">
+    <div role="status" className="fixed bottom-0 left-0 right-0 z-50 bg-amber-900 px-4 py-2 text-center text-sm font-semibold text-amber-100">
       {t.offline.message}
     </div>
   );
