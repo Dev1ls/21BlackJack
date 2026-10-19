@@ -182,3 +182,29 @@ body {
   border-color: var(--gold) !important;
   background: linear-gradient(180deg, var(--felt-surface) 0%, var(--felt-bg) 100%) !important;
 }
+
+/*
+ * gray-400/500/600 fail 4.5:1 on the dark surfaces used in classic theme.
+ * gray-300 (#d1d5db) clears that bar on #111827, #1f2937 and #374151.
+ * The felt theme already remaps these utilities with !important.
+ */
+.text-gray-400,
+.text-gray-500,
+.text-gray-600,
+.text-slate-500,
+.text-slate-600 {
+  color: #d1d5db;
+}
+
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid #6ee7b7;
+  outline-offset: 2px;
+}
+
+[data-theme='casino'] :focus-visible {
+  outline-color: var(--gold-bright);
+}

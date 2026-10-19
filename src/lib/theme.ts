@@ -14,7 +14,11 @@ export function loadTheme(): AppTheme {
 }
 
 export function saveTheme(theme: AppTheme): void {
-  localStorage.setItem(THEME_STORAGE_KEY, theme);
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch {
+    /* Quota or private mode should not interrupt the theme toggle. */
+  }
 }
 
 export function applyTheme(theme: AppTheme): void {

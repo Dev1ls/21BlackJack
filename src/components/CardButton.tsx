@@ -1,4 +1,5 @@
 import type { CardRank } from '../types/blackjack';
+import { useLocale } from '../i18n';
 
 interface CardButtonProps {
   rank: CardRank;
@@ -15,6 +16,7 @@ const SUIT_COLORS: Record<string, string> = {
 };
 
 export function CardButton({ rank, onClick, size = 'md' }: CardButtonProps) {
+  const { t } = useLocale();
   const sizeClasses = {
     sm: 'h-10 min-w-10 text-sm',
     md: 'h-12 min-w-12 text-base',
@@ -27,6 +29,7 @@ export function CardButton({ rank, onClick, size = 'md' }: CardButtonProps) {
     <button
       type="button"
       onClick={() => onClick(rank)}
+      aria-label={t.a11y.card(rank)}
       className={`${sizeClasses[size]} ${colorClass} rounded-lg border border-gray-600 bg-gray-800 px-2 font-semibold active:scale-95 active:bg-gray-700`}
     >
       {rank}

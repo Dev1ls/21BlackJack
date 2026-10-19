@@ -47,6 +47,7 @@ export function MobileStrategyBar({
         <button
           type="button"
           onClick={onToggle}
+          aria-expanded={open}
           className="w-full rounded-xl bg-emerald-700 py-3 text-sm font-bold"
         >
           {open ? t.ui.hidePlay : t.ui.showPlay}

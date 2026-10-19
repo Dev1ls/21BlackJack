@@ -1,7 +1,7 @@
 {
-  "name": "blackjack-live-helper",
+  "name": "blackjack-practice",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,14 +16,14 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.1.8",
+    "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
-    "@vitejs/plugin-react": "^4.4.1",
-    "tailwindcss": "^4.1.8",
+    "@vitejs/plugin-react": "^5.2.0",
+    "tailwindcss": "^4.3.3",
     "typescript": "~5.8.3",
-    "vite": "^6.3.5",
-    "vite-plugin-pwa": "^1.0.0",
-    "vitest": "^3.2.4"
+    "vite": "^8.3.4",
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.0.5"
   }
 }

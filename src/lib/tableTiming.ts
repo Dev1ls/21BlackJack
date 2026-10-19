@@ -4,12 +4,8 @@ import { getStrategy } from './blackjack';
 import { calculateCountStats } from './count';
 
 /**
- * Ventanas de decisión documentadas en blackjack con dealer en vivo (online):
- * - 10–15 s es lo más común (Evolution, Pragmatic Play, etc.)
- * - Algunas mesas permiten hasta 20 s
- * - En casino físico no siempre hay cronómetro, pero el dealer apura si tardas mucho
- *
- * Fuentes generales del sector (2024–2026): guías de live dealer blackjack.
+ * Límites del cronómetro de práctica (10, 15 y 20 s).
+ * Son metas de un ejercicio de velocidad, no una invitación a usar la app en una mesa real.
  */
 export const CASINO_DECISION_WINDOW = {
   typicalSeconds: 10,
@@ -30,7 +26,7 @@ export const TAP_ESTIMATES_MS = {
   slow: 1200,
 } as const;
 
-/** Tiempo para leer la recomendación en pantalla antes de actuar en la mesa */
+/** Tiempo estimado para leer la recomendación durante el ejercicio */
 export const GLANCE_AT_SCREEN_MS = {
   fast: 800,
   average: 1500,
@@ -114,9 +110,8 @@ export function resolveTurnDecision(scenario: TurnScenario): TurnDecisionResult 
 }
 
 /**
- * Jugada automática típica cuando se acaba el tiempo en mesas en vivo:
- * pedir con 11 o menos, plantarse con 12 o más (hard total).
- * Varía por casino; esta es la regla más citada en live dealer online.
+ * Referencia del ejercicio cuando se acaba el tiempo:
+ * pedir con 11 o menos y plantarse con 12 o más.
  */
 export function timeoutFallbackAction(handTotal: number): 'HIT' | 'STAND' {
   return handTotal <= 11 ? 'HIT' : 'STAND';

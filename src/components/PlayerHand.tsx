@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useLocale } from '../i18n';
 import { CardButton } from './CardButton';
 import { parseCardInput, formatCards } from '../lib/blackjack';
@@ -26,6 +26,7 @@ export function PlayerHandPanel({
   onSetCards,
 }: PlayerHandProps) {
   const { t } = useLocale();
+  const manualId = useId();
   const [manualInput, setManualInput] = useState('');
   const [inputError, setInputError] = useState<string | null>(null);
 
@@ -97,6 +98,7 @@ export function PlayerHandPanel({
                 key={`${hand.id}-${cardIdx}`}
                 type="button"
                 onClick={() => onRemoveCard(handIdx, cardIdx)}
+                aria-label={t.a11y.removeCard(t.a11y.card(card))}
                 className="rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm font-semibold"
                 title={t.players.tapToRemove}
               >
@@ -123,7 +125,11 @@ export function PlayerHandPanel({
 
       <div className="mt-3 space-y-1">
         <div className="flex gap-2">
+          <label className="sr-only" htmlFor={manualId}>
+            {t.a11y.manualCards}
+          </label>
           <input
+            id={manualId}
             type="text"
             value={manualInput}
             onChange={(e) => {
@@ -142,7 +148,7 @@ export function PlayerHandPanel({
           </button>
         </div>
         {inputError && (
-          <p className="text-sm text-red-400">{inputError}</p>
+          <p role="alert" className="text-sm text-red-300">{inputError}</p>
         )}
         {player.hands[0]?.cards.length > 0 && (
           <p className="text-xs text-gray-500">

@@ -92,13 +92,15 @@ export function TableModePanel({
       <p className="text-sm text-gray-400">{t.tableMode.description}</p>
 
       <div>
-        <label className="mb-1 block text-sm text-gray-400">{t.tableMode.myPlayerNumber}</label>
+        <p className="mb-1 block text-sm text-gray-300">{t.tableMode.myPlayerNumber}</p>
         <div className="flex flex-wrap gap-2">
           {players.map((player, idx) => (
             <button
               key={player.id}
               type="button"
               onClick={() => onSetMePlayer(player.id)}
+              aria-pressed={player.id === mePlayerId}
+              aria-label={t.a11y.selectPlayer(player.name)}
               className={`rounded-lg px-4 py-2 text-sm font-semibold ${
                 player.id === mePlayerId
                   ? 'bg-emerald-600 text-white'

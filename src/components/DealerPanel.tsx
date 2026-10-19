@@ -103,6 +103,7 @@ export function DealerPanel({
             type="button"
             onClick={() => onSetUpcard(null)}
             disabled={handPhase !== 'opening'}
+            aria-label={t.a11y.removeCard(t.a11y.card(upcard))}
             className="mb-2 rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 font-semibold disabled:opacity-50"
           >
             {upcard} ×
@@ -157,6 +158,7 @@ export function DealerPanel({
               type="button"
               onClick={onClearHole}
               disabled={handPhase === 'roundEnd'}
+              aria-label={t.a11y.removeCard(t.a11y.card(holeCard))}
               className="mb-2 rounded-lg border border-gray-600 bg-gray-700 px-4 py-2 text-sm font-semibold disabled:opacity-50"
             >
               {holeCard} ×
@@ -203,6 +205,7 @@ export function DealerPanel({
                   key={`draw-${idx}`}
                   type="button"
                   onClick={() => onRemoveDrawCard(idx)}
+                  aria-label={t.a11y.removeCard(t.a11y.card(card))}
                   className="rounded-lg border border-gray-600 bg-gray-700 px-3 py-1.5 text-sm font-semibold"
                 >
                   {card} ×

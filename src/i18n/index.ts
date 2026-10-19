@@ -16,7 +16,11 @@ export function loadLocale(): Locale {
 }
 
 export function saveLocale(locale: Locale): void {
-  localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+  try {
+    localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+  } catch {
+    /* Quota or private mode should not interrupt the language toggle. */
+  }
 }
 
 export function getTranslations(locale: Locale): Translations {

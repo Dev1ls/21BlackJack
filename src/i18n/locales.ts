@@ -1,4 +1,36 @@
-import type { BettingSuggestion, StrategyAction } from '../types/blackjack';
+import type { BettingSuggestion, CardRank, StrategyAction } from '../types/blackjack';
+
+const ES_CARD_NAMES: Record<CardRank, string> = {
+  A: 'As',
+  '2': 'Dos',
+  '3': 'Tres',
+  '4': 'Cuatro',
+  '5': 'Cinco',
+  '6': 'Seis',
+  '7': 'Siete',
+  '8': 'Ocho',
+  '9': 'Nueve',
+  '10': 'Diez',
+  J: 'Jota',
+  Q: 'Reina',
+  K: 'Rey',
+};
+
+const EN_CARD_NAMES: Record<CardRank, string> = {
+  A: 'Ace',
+  '2': 'Two',
+  '3': 'Three',
+  '4': 'Four',
+  '5': 'Five',
+  '6': 'Six',
+  '7': 'Seven',
+  '8': 'Eight',
+  '9': 'Nine',
+  '10': 'Ten',
+  J: 'Jack',
+  Q: 'Queen',
+  K: 'King',
+};
 
 export interface Translations {
   app: {
@@ -224,19 +256,43 @@ export interface Translations {
     recommended: (action: string) => string;
     mismatch: string;
   };
+  notice: {
+    badge: string;
+    title: string;
+    body: string;
+    helpIntro: string;
+    helpChile: string;
+    helpScj: string;
+    helpSpain: string;
+    helpUs: string;
+    privacy: string;
+    rules: string;
+  };
+  a11y: {
+    card: (rank: CardRank) => string;
+    removeCard: (name: string) => string;
+    decreaseDecks: string;
+    increaseDecks: string;
+    timerSeconds: (seconds: number) => string;
+    selectPlayer: (name: string) => string;
+    saveFailed: string;
+    saveTrimmed: string;
+    manualCards: string;
+    progress: string;
+  };
 }
 
 export const es: Translations = {
   app: {
-    title: 'Ayudante de Blackjack',
-    subtitle: 'Conteo de cartas · Qué jugar · Modo en vivo',
+    title: 'Práctica de Blackjack',
+    subtitle: 'Entrenador Hi-Lo · Estrategia básica · Solo práctica',
     disclaimer:
-      'Esto es solo para aprender; no te garantiza ganar. Las reglas del casino, cuánto puedes apostar, errores y la suerte del momento también cuentan.',
+      'Entrenador para mayores de 18 años. Practica aquí; no lo uses en un casino ni con dinero real. No promete ganancias.',
   },
   shoe: {
-    title: 'Barajas en la mesa',
+    title: 'Barajas del zapato',
     decks: 'Cantidad:',
-    hint: 'Cuántas barajas usa el casino en esa mesa (lo normal es 6 u 8).',
+    hint: 'En la práctica se simulan 6 u 8 barajas. Ajusta el número para el zapato de ensayo.',
   },
   counter: {
     title: 'Conteo de cartas',
@@ -245,7 +301,7 @@ export const es: Translations = {
     cardsSeen: 'Cartas que ya salieron',
     decksRemaining: 'Barajas que faltan',
     penetration: 'Avance de la baraja',
-    betting: 'Cuánto apostar',
+    betting: 'Apuesta de práctica',
     estimatedEdge: 'Ventaja aproximada',
     edgeApprox: 'Solo una estimación',
     insurance: 'Seguro',
@@ -335,8 +391,8 @@ export const es: Translations = {
     myHandWhenOpening: 'Paso 2: tus 2 cartas iniciales (después de la carta visible del dealer).',
     myHandWhenPlaying: 'Tu turno: pide cartas tocando abajo, o usa los botones Quedarme / Doblar / Separar.',
     myHandWhenDone: 'Mano cerrada — tus cartas siguen visibles para el conteo.',
-    otherPlayers: 'Otros jugadores en la mesa',
-    otherPlayersHint: 'Opcional. Solo si hay más gente: sus cartas visibles mejoran el conteo.',
+    otherPlayers: 'Otros jugadores (simulación)',
+    otherPlayersHint: 'Opcional. Sirve para practicar el conteo con más cartas visibles.',
   },
   flowGuide: {
     title: 'Orden de la mano',
@@ -348,7 +404,7 @@ export const es: Translations = {
     hintPlay:
       'Mira el panel «Qué conviene hacer» → pide, quédate, dobla o separa. La carta oculta del dealer NO va todavía.',
     hintOthers:
-      'Si hay más jugadores, registra sus cartas visibles. Mejora el conteo antes de que te toque.',
+      'Si la simulación tiene más jugadores, registra sus cartas visibles antes de tu turno.',
     hintHole:
       'Ya terminaste tú. El dealer volteó la oculta → tócala en la sección Dealer, paso 2.',
     hintDraw:
@@ -365,9 +421,9 @@ export const es: Translations = {
     },
   },
   tableMode: {
-    title: 'Modo en vivo',
+    title: 'Simulación de mesa',
     description:
-      'Guarda tu jugada mientras los demás piden cartas. Si salen más cartas visibles, la app recalcula solo.',
+      'Practica una decisión preliminar mientras registras cartas de otros jugadores. La sugerencia se recalcula en la simulación.',
     myPlayerNumber: '¿Cuál jugador eres tú?',
     lockPreliminary: 'Guardar mi jugada por ahora',
     preliminaryDecision: 'Lo que ibas a hacer',
@@ -402,24 +458,24 @@ export const es: Translations = {
       'Cuando queda poca baraja, cada carta nueva pesa más en el conteo. La app calcula esto restando las cartas que ya registraste.',
     penetrationTitle: 'Avance de la baraja',
     penetrationBody:
-      'Es qué tan lejos van en repartir antes de barajar de nuevo. Más avance = conteo más confiable, pero menos tiempo para subir la apuesta.',
+      'Es qué tan avanzada va la baraja simulada antes de barajar de nuevo. Más avance = el conteo de práctica es más informativo.',
     penetrationFormula: 'Avance = Cartas que salieron ÷ Total de cartas × 100',
-    tableDynamicsTitle: 'Varios jugadores en la mesa',
+    tableDynamicsTitle: 'Varios jugadores',
     tableDynamicsBody:
-      'Con 3 o 4 jugadores salen más cartas boca arriba antes de que te toque. Aprovecha para ir metiendo lo que ves y afinar tu jugada.',
+      'En la simulación, más jugadores significan más cartas visibles antes de tu turno. Regístralas para afinar el conteo de práctica.',
     visibleCardsTitle: 'Mientras más cartas registres, mejor',
     visibleCardsBody:
       'Cuenta todo lo visible: dealer, tu mano, otros jugadores y cartas botadas. Cada carta mejora el conteo.',
     estimatedEdgeTitle: 'Ventaja aproximada',
     estimatedEdgeBody:
-      'Es una idea general de si la mesa te favorece; no promete que vayas a ganar.',
+      'Es una cifra de entrenamiento. No es una ventaja en dinero real y no promete ganancias.',
     estimatedEdgeFormula: 'Ventaja ≈ (Conteo real − 1) × 0.5%',
     varianceTitle: 'Igual puedes perder racha',
     varianceBody:
-      'Aunque el conteo vaya bien, en lo corto puedes perder varias manos seguidas. Esta app te ayuda a jugar mejor; no le gana a la suerte.',
+      'Aunque el conteo de práctica vaya bien, una racha corta puede salir mal. Este entrenador no le gana a la suerte.',
   },
   offline: {
-    message: 'Sin internet — todo se guarda en tu celular',
+    message: 'Sin internet — la práctica queda guardada en este dispositivo',
   },
   language: {
     label: 'Idioma',
@@ -429,7 +485,7 @@ export const es: Translations = {
   theme: {
     label: 'Estilo',
     classic: 'Clásico',
-    casino: 'Casino',
+    casino: 'Fieltro',
   },
   actions: {
     HIT: 'PEDIR',
@@ -464,32 +520,60 @@ export const es: Translations = {
   practiceTimer: {
     title: 'Practica contra el reloj',
     description:
-      'Simula los segundos que tienes en mesas en vivo. Mete dealer y tus cartas, inicia el cronómetro y pulsa Listo cuando termines.',
+      'Cronómetro de práctica. Elige un límite, registra las cartas y pulsa Listo. Es un ejercicio, no un modo para una mesa real.',
     waiting: 'Elige la carta del dealer y al menos 2 cartas tuyas para practicar.',
-    presetLabel: 'Tiempo de mesa:',
+    presetLabel: 'Límite de práctica:',
     start: 'Iniciar cronómetro',
     ready: '¡Listo!',
     tryAgain: 'Intentar de nuevo',
     runningHint: 'te queda',
     success: (seconds) => `Bien: lo hiciste en ${seconds} s`,
-    timeout: 'Se acabó el tiempo — en la mesa habrían jugado por ti',
-    autoPlay: (action) => `Jugada automática típica: ${action}`,
+    timeout: 'Se acabó el tiempo de práctica',
+    autoPlay: (action) => `Referencia del ejercicio si se agota el tiempo: ${action}`,
     recommended: (action) => `Lo que te conviene: ${action}`,
-    mismatch: 'Ojo: la jugada automática no siempre es la mejor. Por eso conviene ir rápido.',
+    mismatch: 'Esa referencia rápida no siempre coincide con la estrategia básica. Por eso se practica.',
+  },
+  notice: {
+    badge: '18+',
+    title: 'Solo práctica. Juega con responsabilidad.',
+    body: 'Esta app es un entrenador. No la uses en un casino, en una mesa en vivo ni para apostar dinero real. El conteo con un dispositivo puede estar prohibido y puede violar las reglas del local.',
+    helpIntro: 'Si el juego te está afectando, pide ayuda:',
+    helpChile: 'Jugadores Anónimos Chile',
+    helpScj: 'Autoexclusión SCJ (Chile)',
+    helpSpain: 'FEJAR (España)',
+    helpUs: '1-800-GAMBLER (EE. UU.)',
+    privacy:
+      'Privacidad: no hay cuenta, analítica ni servidor. Las manos de práctica se guardan solo en este navegador y puedes borrarlas con «Baraja nueva».',
+    rules:
+      'La estrategia asume varias barajas, dealer que se planta en todo 17 (también el 17 blando) y sin rendición. No se ajusta sola a otras reglas.',
+  },
+  a11y: {
+    card: (rank) => ES_CARD_NAMES[rank],
+    removeCard: (name) => `Quitar ${name}`,
+    decreaseDecks: 'Menos barajas',
+    increaseDecks: 'Más barajas',
+    timerSeconds: (seconds) => `${seconds} segundos`,
+    selectPlayer: (name) => `Elegir ${name}`,
+    saveFailed:
+      'No se pudo guardar la práctica en este navegador. Puedes seguir entrenando; el progreso de esta visita puede perderse al cerrar.',
+    saveTrimmed:
+      'No había espacio para todo el historial. Se guardó la mano actual y se omitieron manos anteriores.',
+    manualCards: 'Escribir cartas a mano',
+    progress: 'Tiempo de práctica restante',
   },
 };
 
 export const en: Translations = {
   app: {
-    title: 'Blackjack Live Helper',
-    subtitle: 'Hi-Lo count · Strategy · Table mode',
+    title: 'Blackjack Practice',
+    subtitle: 'Hi-Lo trainer · Basic strategy · Practice only',
     disclaimer:
-      'This tool is educational and does not guarantee profit. Casino rules, table limits, penetration, mistakes, and variance affect results.',
+      'Practice trainer for ages 18+. Use it to train here, not at a casino and not with real money. It does not promise winnings.',
   },
   shoe: {
     title: 'Shoe',
     decks: 'Decks:',
-    hint: 'How many decks the casino uses at this table (usually 6 or 8).',
+    hint: 'Practice shoes usually use 6 or 8 decks. Change the number for the drill.',
   },
   counter: {
     title: 'Count Dashboard',
@@ -498,7 +582,7 @@ export const en: Translations = {
     cardsSeen: 'Cards Seen',
     decksRemaining: 'Decks Remaining',
     penetration: 'Penetration',
-    betting: 'Betting',
+    betting: 'Practice bet',
     estimatedEdge: 'Estimated Edge',
     edgeApprox: 'Approximation only',
     insurance: 'Insurance',
@@ -550,7 +634,7 @@ export const en: Translations = {
     title: 'Extra cards for the count',
     hint: 'Anything visible NOT in dealer or your hand: burn cards on shuffle, discards, neighbors, etc.',
     burnNote:
-      '🔥 Burn cards: when a new shoe starts, the dealer usually burns 1 card (sometimes more). Log it here — you do NOT need other players at the table.',
+      '🔥 Burn cards: when a new practice shoe starts, log the burned card here (usually 1). You do not need other players for that.',
   },
   strategy: {
     title: 'Strategy',
@@ -588,8 +672,8 @@ export const en: Translations = {
     myHandWhenOpening: 'Step 2: your 2 starting cards (after the dealer upcard above).',
     myHandWhenPlaying: 'Your turn: tap cards below to hit, or use Stand / Double / Split.',
     myHandWhenDone: 'Hand closed — your cards stay visible for the count.',
-    otherPlayers: 'Other players at the table',
-    otherPlayersHint: 'Optional. Only if others are playing — their visible cards improve the count.',
+    otherPlayers: 'Other players (simulation)',
+    otherPlayersHint: 'Optional. Use it to practice the count with more face-up cards.',
   },
   flowGuide: {
     title: 'Hand order',
@@ -601,7 +685,7 @@ export const en: Translations = {
     hintPlay:
       'Check «Strategy» panel → hit, stand, double, or split. Dealer hole card is NOT entered yet.',
     hintOthers:
-      'If others are at the table, log their visible cards. Better count before your turn.',
+      'If the simulation has other players, log their face-up cards before your turn.',
     hintHole:
       'You are done. Dealer flipped the hole card → tap it in Dealer section, step 2.',
     hintDraw:
@@ -618,9 +702,9 @@ export const en: Translations = {
     },
   },
   tableMode: {
-    title: 'Live Table Mode',
+    title: 'Table simulation',
     description:
-      'Lock your preliminary decision while other players act. The app recalculates as extra visible cards are added.',
+      'Practice a preliminary decision while you log other players’ cards. The suggestion updates inside the simulation.',
     myPlayerNumber: 'My Player Number',
     lockPreliminary: 'Lock Preliminary Decision',
     preliminaryDecision: 'Preliminary Decision',
@@ -655,24 +739,24 @@ export const en: Translations = {
       'Fewer decks remaining means each card has more impact on the count. The app estimates decks left from total cards minus cards seen.',
     penetrationTitle: 'Penetration',
     penetrationBody:
-      'Penetration is how deep into the shoe you are. Higher penetration means more reliable count data, but less time to bet big before the shuffle.',
+      'Penetration is how deep the practice shoe has been dealt. Deeper penetration makes the practice count more informative.',
     penetrationFormula: 'Penetration = Cards Seen ÷ Total Cards × 100',
     tableDynamicsTitle: 'Table Dynamics',
     tableDynamicsBody:
-      'With 3–4 players at the table, more cards are dealt face-up before your turn. That gives you extra time to input visible cards and refine your count and strategy decision.',
+      'In the simulation, more players mean more face-up cards before your turn. Log them to sharpen the practice count.',
     visibleCardsTitle: 'More Visible Cards = Better Count',
     visibleCardsBody:
       'Every card you can see — dealer upcard, your hand, other players, and discards — improves count accuracy. Track everything visible.',
     estimatedEdgeTitle: 'Estimated Edge',
     estimatedEdgeBody:
-      'The edge estimate is a rough approximation, not a guarantee of profit.',
+      'The edge figure is a training estimate. It is not a real-money edge and it does not promise winnings.',
     estimatedEdgeFormula: 'Estimated Edge ≈ (True Count − 1) × 0.5%',
     varianceTitle: 'Variance Still Matters',
     varianceBody:
-      'Even with a positive count, short-term results swing wildly. You can lose many hands in a row despite playing correctly. This tool helps you make better decisions — it does not eliminate luck.',
+      'A good practice count can still be followed by a losing streak. This trainer does not beat luck.',
   },
   offline: {
-    message: 'Offline — all data saved locally',
+    message: 'Offline — practice stays on this device',
   },
   language: {
     label: 'Language',
@@ -682,7 +766,7 @@ export const en: Translations = {
   theme: {
     label: 'Style',
     classic: 'Classic',
-    casino: 'Casino',
+    casino: 'Felt',
   },
   actions: {
     HIT: 'HIT',
@@ -717,17 +801,45 @@ export const en: Translations = {
   practiceTimer: {
     title: 'Beat the Clock Practice',
     description:
-      'Simulate live-table decision time. Enter dealer and your cards, start the timer, tap Ready when done.',
+      'Practice timer. Pick a limit, enter the cards, and tap Ready. It is a drill, not a mode for a real table.',
     waiting: 'Set the dealer card and at least 2 of your cards to practice.',
-    presetLabel: 'Table timer:',
+    presetLabel: 'Practice limit:',
     start: 'Start timer',
     ready: 'Ready!',
     tryAgain: 'Try again',
     runningHint: 'remaining',
     success: (seconds) => `Nice: finished in ${seconds}s`,
-    timeout: "Time's up — the table would auto-play for you",
-    autoPlay: (action) => `Typical auto-play: ${action}`,
+    timeout: 'Practice time is up',
+    autoPlay: (action) => `Drill reference if time runs out: ${action}`,
     recommended: (action) => `Recommended: ${action}`,
-    mismatch: 'Auto-play is not always optimal — speed matters.',
+    mismatch: 'That quick reference does not always match basic strategy. That is why this is practice.',
+  },
+  notice: {
+    badge: '18+',
+    title: 'Practice only. Gamble responsibly.',
+    body: 'This app is a trainer. Do not use it in a casino, at a live table, or to bet real money. Using a counting device can be illegal and can break house rules.',
+    helpIntro: 'If gambling is hurting you, ask for help:',
+    helpChile: 'Jugadores Anónimos Chile',
+    helpScj: 'SCJ self-exclusion (Chile)',
+    helpSpain: 'FEJAR (Spain)',
+    helpUs: '1-800-GAMBLER (US)',
+    privacy:
+      'Privacy: there is no account, analytics, or server. Practice hands stay in this browser, and “Reset Shoe” clears them.',
+    rules:
+      'Strategy assumes multiple decks, a dealer who stands on every 17 (including soft 17), and no surrender. It does not adapt to other rules.',
+  },
+  a11y: {
+    card: (rank) => EN_CARD_NAMES[rank],
+    removeCard: (name) => `Remove ${name}`,
+    decreaseDecks: 'Fewer decks',
+    increaseDecks: 'More decks',
+    timerSeconds: (seconds) => `${seconds} seconds`,
+    selectPlayer: (name) => `Choose ${name}`,
+    saveFailed:
+      'This browser could not save the practice session. You can keep training; progress from this visit may be lost when you close it.',
+    saveTrimmed:
+      'There was not enough space for the full history. The current hand was saved and older hands were left out.',
+    manualCards: 'Type cards manually',
+    progress: 'Practice time remaining',
   },
 };

@@ -52,6 +52,8 @@ export function StrategyHero({
 
   return (
     <div
+      aria-live="polite"
+      aria-atomic="true"
       className={`rounded-xl border-2 border-emerald-600 bg-gray-900/90 ${compact ? 'p-3' : 'p-4'} shadow-lg shadow-emerald-900/20`}
     >
       <p className="mb-2 text-xs uppercase tracking-wide text-emerald-400">{t.strategy.title}</p>
@@ -64,7 +66,7 @@ export function StrategyHero({
             {t.actions[action]}
           </span>
           {reason && <p className="mt-2 text-sm text-gray-400">{reason}</p>}
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-gray-300">
             {t.strategy.cards} {playerCards.join(', ') || '—'} · {t.strategy.total} {handTotal}
           </p>
         </div>
@@ -74,15 +76,15 @@ export function StrategyHero({
 
       <div className="mt-3 grid grid-cols-2 gap-2 border-t border-gray-700 pt-3 text-center text-xs">
         <div>
-          <p className="text-gray-500">{t.counter.runningCount}</p>
+          <p className="text-gray-300">{t.counter.runningCount}</p>
           <p className="text-lg font-bold">{stats.runningCount.toFixed(0)}</p>
         </div>
         <div>
-          <p className="text-gray-500">{t.counter.trueCount}</p>
+          <p className="text-gray-300">{t.counter.trueCount}</p>
           <p className="text-lg font-bold">{stats.trueCount.toFixed(1)}</p>
         </div>
         <div className="col-span-2">
-          <p className="text-gray-500">{t.counter.betting}</p>
+          <p className="text-gray-300">{t.counter.betting}</p>
           <p className="font-bold text-amber-300">{t.betting[stats.bettingSuggestion]}</p>
         </div>
       </div>

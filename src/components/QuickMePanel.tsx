@@ -46,6 +46,7 @@ export function QuickMePanel({
             type="button"
             onClick={() => canEdit && onRemoveCard(idx)}
             disabled={!canEdit}
+            aria-label={t.a11y.removeCard(t.a11y.card(card))}
             className="rounded-lg border border-emerald-700 bg-gray-800 px-3 py-2 text-sm font-bold disabled:opacity-60"
           >
             {card} ×

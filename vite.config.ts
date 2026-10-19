@@ -1,11 +1,13 @@
 /// <reference types="vitest/config" />
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   server: {
+    // LAN access so a phone on the same network can open the dev server.
+    // Development and local preview only.
     host: true,
     port: 5173,
   },
@@ -24,10 +26,11 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/icon-192.png', 'icons/icon-512.png'],
       manifest: {
-        name: 'Blackjack Live Helper',
-        short_name: 'BJ Helper',
+        name: 'Práctica de Blackjack',
+        short_name: 'BJ Práctica',
         description:
-          'Live blackjack helper with Hi-Lo count, true count, strategy, betting ramp, and table mode.',
+          'Entrenador de blackjack para practicar conteo Hi-Lo, conteo real y estrategia básica. Solo práctica, 18+.',
+        lang: 'es',
         theme_color: '#111827',
         background_color: '#111827',
         display: 'standalone',
